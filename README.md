@@ -1,5 +1,12 @@
 # 🏥 Emergency Hospital Resource Optimizer (EHODR)
 
+## 📄 Preview the Presentation
+
+- [EHODR presentation PDF](./presentation.pdf)
+- [EHODR slide deck (PPTX)](./EHODR.pptx)
+
+Clicking either link on GitHub will open the file preview directly in the repository view.
+
 EHODR is a full-stack, disaster-response decision-support platform combining a **Quantum-Inspired optimization engine**, a **Universal AI Memory System (UAMS)** backend, **real-time GIS routing**, and **three role-specific HTML command dashboards** — all built to SDG 3 (Good Health & Well-being) standards.
 
 ---
