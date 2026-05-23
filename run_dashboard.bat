@@ -1,3 +1,3 @@
 @echo off
-echo 🎨 Starting Hospital Resource Optimizer Dashboard (Streamlit)...
-.\venv\Scripts\streamlit.exe run app_enhanced.py
+cd /d "%~dp0"
+call run_ehodr.bat

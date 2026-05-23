@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EHODR | Command Dashboard Hub</title>
+    <title>EHODR | Unified Dashboard Hub</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -17,19 +17,50 @@
       <div class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-md">
         <div>
           <p class="font-label-caps text-label-caps text-secondary mb-xs">EHODR Emergency Response</p>
-          <h1 class="font-display-lg text-display-lg text-primary">Command Dashboard Hub</h1>
+          <h1 class="font-display-lg text-display-lg text-primary">Unified Dashboard Hub</h1>
           <p class="text-on-surface-variant mt-sm max-w-2xl">
-            Choose a role-specific workspace. Each dashboard runs independently with live UI interactions.
+            One entry point for patient triage, GIS hospital mapping, and live role command centers.
           </p>
         </div>
-        <div class="flex items-center gap-sm bg-error-container text-on-error-container px-md py-xs rounded-full">
-          <span class="material-symbols-outlined text-[18px]">emergency</span>
-          <span class="font-label-caps text-label-caps">SYSTEM ONLINE</span>
+        <div class="flex flex-col items-end gap-xs">
+          <div class="flex items-center gap-sm bg-error-container text-on-error-container px-md py-xs rounded-full">
+            <span class="material-symbols-outlined text-[18px]">emergency</span>
+            <span class="font-label-caps text-label-caps">SYSTEM ONLINE</span>
+          </div>
+          <p id="live-status" class="text-xs text-secondary">Connecting…</p>
         </div>
       </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-margin-mobile md:px-margin-desktop py-xl">
+      <!-- Primary: Optimizer + GIS -->
+      <a
+        href="http://localhost:8501"
+        target="_blank"
+        rel="noopener"
+        class="group block bg-primary text-white rounded-xl p-lg mb-xl shadow-md hover:shadow-lg transition-all border-2 border-primary-container"
+      >
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-lg">
+          <div class="flex items-start gap-lg">
+            <div class="w-14 h-14 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-3xl">map</span>
+            </div>
+            <div>
+              <p class="font-label-caps text-label-caps text-on-primary-container mb-xs">START HERE</p>
+              <h2 class="font-headline-lg text-headline-lg mb-xs">Hospital Optimizer & GIS Dispatch</h2>
+              <p class="text-on-primary-container text-sm max-w-xl">
+                Select disaster scenarios, register patients, view triage details, run allocation solvers, and explore the
+                <strong>Real-Time GIS Dispatch Map</strong> with hospital routing.
+              </p>
+            </div>
+          </div>
+          <span class="font-label-caps text-label-caps bg-white text-primary px-lg py-md rounded-lg shrink-0 group-hover:bg-secondary-container transition-colors">
+            Open Optimizer →
+          </span>
+        </div>
+      </a>
+
+      <p class="font-label-caps text-label-caps text-on-surface-variant mb-md">LIVE COMMAND CENTERS (shared API)</p>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
         <a
           href="ambulance.html"
@@ -40,9 +71,9 @@
           </div>
           <h2 class="font-headline-md text-headline-md text-primary mb-xs">Ambulance Command</h2>
           <p class="text-sm text-on-surface-variant mb-lg">
-            Unit 704 cockpit: live vitals, navigation, hospital readiness, and en-route clinical actions.
+            Unit 704 cockpit: live vitals, navigation, hospital readiness, en-route log.
           </p>
-          <span class="font-label-caps text-label-caps text-secondary group-hover:underline">Open dashboard →</span>
+          <span class="font-label-caps text-label-caps text-secondary group-hover:underline">Open →</span>
         </a>
 
         <a
@@ -54,9 +85,9 @@
           </div>
           <h2 class="font-headline-md text-headline-md text-primary mb-xs">Guardian Portal</h2>
           <p class="text-sm text-on-surface-variant mb-lg">
-            Family-facing tracker: ambulance ETA, journey timeline, secure chat, and required forms.
+            Family tracker: ETA, journey timeline, coordinator chat, forms.
           </p>
-          <span class="font-label-caps text-label-caps text-secondary group-hover:underline">Open dashboard →</span>
+          <span class="font-label-caps text-label-caps text-secondary group-hover:underline">Open →</span>
         </a>
 
         <a
@@ -68,42 +99,37 @@
           </div>
           <h2 class="font-headline-md text-headline-md text-primary mb-xs">ER Command Center</h2>
           <p class="text-sm text-on-surface-variant mb-lg">
-            Hospital dispatch: incoming units, capacity monitor, surgical readiness, and regional map.
+            Incoming units, capacity, surgical teams, regional overview.
           </p>
-          <span class="font-label-caps text-label-caps text-secondary group-hover:underline">Open dashboard →</span>
+          <span class="font-label-caps text-label-caps text-secondary group-hover:underline">Open →</span>
         </a>
       </div>
 
-      <p id="live-status" class="text-sm text-secondary font-body-bold mb-md">Connecting to live API…</p>
-      <section class="mt-xl bg-primary-container text-white rounded-xl p-lg">
-        <h3 class="font-headline-md text-headline-md mb-sm">Quick start</h3>
-        <ol class="list-decimal list-inside space-y-xs text-on-primary-container text-sm">
-          <li>From the repo root, run <code class="bg-white/10 px-1 rounded">.\run_command_dashboards.ps1</code></li>
-          <li>Open <code class="bg-white/10 px-1 rounded">http://localhost:8080</code> — all dashboards share live data via <code class="bg-white/10 px-1 rounded">/api/state</code></li>
-          <li>Open Ambulance + Guardian + ER in separate tabs to see vitals, ETA, and chat stay in sync</li>
-        </ol>
+      <section class="mt-xl bg-surface-container-low border border-outline-variant rounded-xl p-lg">
+        <h3 class="font-headline-md text-headline-md text-primary mb-sm">Quick links</h3>
+        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-sm text-sm">
+          <li><a class="text-secondary hover:underline" href="http://localhost:8501" target="_blank" rel="noopener">Optimizer — patient picker & GIS map (:8501)</a></li>
+          <li><a class="text-secondary hover:underline" href="/ambulance.html">Ambulance command (:8080)</a></li>
+          <li><a class="text-secondary hover:underline" href="/guardian.html">Guardian portal (:8080)</a></li>
+          <li><a class="text-secondary hover:underline" href="/er-command.html">ER command (:8080)</a></li>
+          <li><a class="text-secondary hover:underline" href="/api/state" target="_blank" rel="noopener">Live JSON API — /api/state</a></li>
+        </ul>
+        <p class="text-xs text-on-surface-variant mt-md">
+          Run once from repo root: <code class="bg-white px-1 rounded">.\run_ehodr.ps1</code>
+        </p>
       </section>
     </main>
 
     <footer class="border-t border-outline-variant py-lg text-center text-sm text-on-surface-variant">
       © 2024 EHODR Emergency Response Systems
     </footer>
-    <script src="shared/nav.js"></script>
     <script src="shared/live-data.js"></script>
     <script>
       window.EHODR.live.onUpdate(function (s) {
         const el = document.getElementById("live-status");
         if (el) {
           el.textContent =
-            "Live sync active — " +
-            s.patient.name +
-            " | Unit " +
-            s.unit.id +
-            " | HR " +
-            s.vitals.heartRate +
-            " | ETA " +
-            Math.ceil(s.transport.etaSeconds / 60) +
-            " min";
+            "Live — " + s.patient.name + " | Unit " + s.unit.id + " | HR " + s.vitals.heartRate + " | ETA " + Math.ceil(s.transport.etaSeconds / 60) + " min";
         }
       });
       window.EHODR.live.start();

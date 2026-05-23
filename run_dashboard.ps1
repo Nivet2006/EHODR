@@ -1,2 +1,2 @@
-Write-Host "[INFO] Starting Hospital Resource Optimizer Dashboard (Streamlit)..." -ForegroundColor Green
-& .\venv\Scripts\streamlit.exe run app_enhanced.py
+# Delegates to unified launcher (includes Streamlit optimizer)
+& "$PSScriptRoot\run_ehodr.ps1"

@@ -1,5 +1,52 @@
 # 🧪 EHODR Dashboard — Interactive Test Cases & Testing Guide
 
+
+Viewed run_all.ps1:1-15
+Viewed README.md:1-314
+
+The EHODR platform provides several launch options depending on whether you want to run the full stack (with the Docker-based AI Memory System), the interactive live role dashboards, or the optimizer dashboard alone.
+
+Here are the commands to run the different components from your PowerShell terminal in the `C:\codingprojects\EHODR` directory:
+
+### 1. Launch the Full Stack (Recommended)
+This command spins up the backend Docker containers (PostgreSQL, Qdrant, Redis, and the FastAPI Memory Gateway), installs dependencies, initializes databases, and launches the interactive Streamlit optimizer.
+```powershell
+.\run_all.ps1
+```
+* **Optimizer URL**: `http://localhost:8501`
+* **Memory Gateway URL**: `http://localhost:8000`
+
+---
+
+### 2. Launch the Interactive HTML Command Dashboards (Role-based views)
+This launches the live-ticking HTTP server for the role-specific dashboards (Ambulance, Guardian, and ER Command) along with the headless GIS optimizer engine.
+```powershell
+.\run_ehodr.ps1
+```
+*(Alternatively, you can delegate to the same launcher using `.\run_command_dashboards.ps1`)*
+* **Main Hub Entry Point**: `http://127.0.0.1:8080/`
+* **Ambulance cockpit**: `http://127.0.0.1:8080/ambulance.html`
+* **Guardian portal**: `http://127.0.0.1:8080/guardian.html`
+* **ER Command center**: `http://127.0.0.1:8080/er-command.html`
+
+---
+
+### 3. Launch Streamlit Optimizer Only (Bypass Docker backend)
+If you do not have Docker running or wish to test only the quantum-inspired solver and Indian GIS map without the AI memory system, use:
+```powershell
+.\run_dashboard.ps1
+```
+* **Optimizer URL**: `http://localhost:8501`
+
+---
+
+### 4. Stop All Running Services
+To clean up all active Python processes, Streamlit workers, and Docker containers when you are done:
+```powershell
+.\kill_all.ps1
+```
+
+
 This guide provides detailed, step-by-step test cases to run on the **Emergency Hospital Resource Optimizer (EHODR)** web dashboard. It shows you exactly what settings to configure, what data to enter, and what optimal outcomes to look for to verify the system.
 
 1. Download & Install Docker Desktop
