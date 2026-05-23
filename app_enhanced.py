@@ -93,6 +93,81 @@ st.markdown('<div class="badge">SDG 3: Good Health & Well-being</div> <span styl
 st.markdown('<div class="subtitle">Quantum and Quantum‑Inspired resource allocations for extreme events. Handles beds, ventilators, medical staff, and specialty constraints.</div>', unsafe_allow_html=True)
 
 # -------------------------------
+# GIS & Routing Helper Functions
+# -------------------------------
+import math
+
+def calculate_haversine(lat1, lon1, lat2, lon2):
+    """
+    Standard Haversine formula to compute great-circle distance in kilometers.
+    Multiplies by a 1.3 circuity factor to approximate real driving road distance.
+    """
+    R = 6371.0  # Earth's radius in km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    dist = R * c
+    return round(dist * 1.3, 1)
+
+def get_road_route(start_lat, start_lon, end_lat, end_lon):
+    """
+    Queries the public OpenStreetMap/OSRM Routing API to retrieve actual
+    road driving distances (km), durations (minutes), and polyline coordinates.
+    Gracefully falls back to the Haversine formula in case of timeouts/offline states.
+    """
+    url = f"http://router.project-osrm.org/route/v1/driving/{start_lon},{start_lat};{end_lon},{end_lat}?overview=full&geometries=geojson"
+    try:
+        response = requests.get(url, timeout=3.0)
+        if response.status_code == 200:
+            data = response.json()
+            if "routes" in data and len(data["routes"]) > 0:
+                route = data["routes"][0]
+                distance_km = round(route["distance"] / 1000.0, 1)
+                duration_min = round(route["duration"] / 60.0, 1)
+                path = route["geometry"]["coordinates"]  # List of [lon, lat]
+                path_lat_lon = [[lat, lon] for lon, lat in path]
+                return distance_km, duration_min, path_lat_lon
+    except Exception:
+        pass
+        
+    # Haversine fallback (assumes average 30 km/h driving speed in dense urban traffic)
+    distance_km = calculate_haversine(start_lat, start_lon, end_lat, end_lon)
+    duration_min = round((distance_km / 30.0) * 60.0, 1)
+    path_lat_lon = [[start_lat, start_lon], [end_lat, end_lon]]
+    return distance_km, duration_min, path_lat_lon
+
+
+# GIS Presets Data Definitions (Karnataka, Kerala, Tamil Nadu)
+GIS_PRESETS = {
+    "🌍 Bangalore Metro Triage (10 patients)": {
+        "center": [12.9716, 77.5946],
+        "hospitals": {
+            "H1": {"name": "NIMHANS Trauma Center", "coord": [12.9429, 77.5975]},
+            "H2": {"name": "Fortis Hospital Bannerghatta", "coord": [12.8953, 77.5982]},
+            "H3": {"name": "Manipal Hospital Old Airport Rd", "coord": [12.9592, 77.6444]}
+        }
+    },
+    "🌍 Kerala Kochi Flood Triage (8 patients)": {
+        "center": [9.9816, 76.2999],
+        "hospitals": {
+            "H1": {"name": "Aster Medcity Kochi", "coord": [10.0357, 76.2736]},
+            "H2": {"name": "Amrita Hospital Edappally", "coord": [10.0326, 76.2925]},
+            "H3": {"name": "Medical Trust Hospital Kochi", "coord": [9.9622, 76.2862]}
+        }
+    },
+    "🌍 Chennai Cyclone Surge (12 patients)": {
+        "center": [13.0827, 80.2707],
+        "hospitals": {
+            "H1": {"name": "Apollo Hospital Greams Rd", "coord": [13.0603, 80.2529]},
+            "H2": {"name": "MIOT International Hospital", "coord": [13.0232, 80.1872]},
+            "H3": {"name": "Fortis Malar Hospital Adyar", "coord": [13.0076, 80.2554]}
+        }
+    }
+}
+
+
+# -------------------------------
 # Progress Tracker (live checkboxes)
 with st.expander("📋 **Disaster Optimization checklist - Progress Tracker**", expanded=False):
     st.markdown("""
@@ -111,7 +186,16 @@ with st.expander("📋 **Disaster Optimization checklist - Progress Tracker**", 
 st.sidebar.header("⚙️ Emergency Scenario Configuration")
 
 # Scenario presets
-scenario = st.sidebar.selectbox("Load disaster scenario preset", ["Custom", "Mass Casualty (10 patients)", "Pandemic Surge (12 patients)", "Earthquake (8 patients)", "📝 Live Patient Registrar"])
+scenario = st.sidebar.selectbox("Load disaster scenario preset", [
+    "Custom", 
+    "Mass Casualty (10 patients)", 
+    "Pandemic Surge (12 patients)", 
+    "Earthquake (8 patients)", 
+    "📝 Live Patient Registrar",
+    "🌍 Bangalore Metro Triage (10 patients)",
+    "🌍 Kerala Kochi Flood Triage (8 patients)",
+    "🌍 Chennai Cyclone Surge (12 patients)"
+])
 if scenario == "Mass Casualty (10 patients)":
     n_patients = 10
     n_hospitals = 3
@@ -130,6 +214,24 @@ elif scenario == "Earthquake (8 patients)":
     beds = {"H1": 6, "H2": 5}
     vents = {"H1": 5, "H2": 4}
     staff = {"H1": 4, "H2": 4}
+elif scenario == "🌍 Bangalore Metro Triage (10 patients)":
+    n_patients = 10
+    n_hospitals = 3
+    beds = {"H1": 8, "H2": 6, "H3": 4}
+    vents = {"H1": 6, "H2": 4, "H3": 3}
+    staff = {"H1": 5, "H2": 4, "H3": 3}
+elif scenario == "🌍 Kerala Kochi Flood Triage (8 patients)":
+    n_patients = 8
+    n_hospitals = 3
+    beds = {"H1": 6, "H2": 5, "H3": 4}
+    vents = {"H1": 5, "H2": 4, "H3": 3}
+    staff = {"H1": 4, "H2": 4, "H3": 2}
+elif scenario == "🌍 Chennai Cyclone Surge (12 patients)":
+    n_patients = 12
+    n_hospitals = 3
+    beds = {"H1": 10, "H2": 8, "H3": 6}
+    vents = {"H1": 8, "H2": 6, "H3": 4}
+    staff = {"H1": 7, "H2": 5, "H3": 4}
 elif scenario == "📝 Live Patient Registrar":
     if "registered_patients" not in st.session_state:
         st.session_state.registered_patients = [
@@ -370,7 +472,6 @@ class HospitalAllocationAnnealer(Annealer):
                 
         return cost
 
-# -------------------------------
 # Data Generation
 np.random.seed(42)
 if scenario == "📝 Live Patient Registrar":
@@ -385,10 +486,71 @@ if scenario == "📝 Live Patient Registrar":
         ]
     severity = np.array([p["severity"] for p in st.session_state.registered_patients])
     distance = np.array([p["distance"][:n_hospitals] for p in st.session_state.registered_patients])
+    hospitals = [f"H{i+1}" for i in range(n_hospitals)]
+elif scenario in GIS_PRESETS:
+    preset = GIS_PRESETS[scenario]
+    hospitals = list(preset["hospitals"].keys())
+    
+    # Store geographic routing in session state to prevent slow redundant OSRM API calls on streamlit reload
+    gis_key = f"gis_data_{scenario}"
+    if gis_key not in st.session_state:
+        patients_list = []
+        center = preset["center"]
+        names = ["Aarav Sharma", "Ananya Rao", "Aditya Patel", "Diya Nair", "Ishaan Kapoor", 
+                 "Kavya Iyer", "Pranav Reddy", "Rohan Das", "Siddharth Menon", "Zara Khan",
+                 "Neha Verma", "Rahul Krishnan"]
+        
+        # Generate patients with realistic offsets (~5-15km)
+        pats_coords = []
+        for i in range(n_patients):
+            p_lat = center[0] + np.random.uniform(-0.06, 0.06)
+            p_lon = center[1] + np.random.uniform(-0.06, 0.06)
+            p_sev = np.random.randint(1, 4)
+            p_name = names[i % len(names)]
+            pats_coords.append({
+                "name": p_name,
+                "lat": p_lat,
+                "lon": p_lon,
+                "severity": p_sev,
+                "symptoms": np.random.choice([
+                    ["Chest Pain / Cardiac Symptoms"],
+                    ["Respiratory Distress / Difficulty Breathing"],
+                    ["Severe Trauma / Lacerations"],
+                    ["Moderate Pain / Sprains"],
+                    ["Minor Scratches / Contusions"]
+                ])
+            })
+            
+        # Build routing matrix
+        dist_matrix = []
+        routes_matrix = {}
+        for p_idx, p in enumerate(pats_coords):
+            p_row = []
+            for h_idx, h_name in enumerate(hospitals):
+                h_coord = preset["hospitals"][h_name]["coord"]
+                distance_km, duration_min, path_lat_lon = get_road_route(p["lat"], p["lon"], h_coord[0], h_coord[1])
+                # We use travel time in minutes as the optimization distance factor
+                p_row.append(duration_min)
+                routes_matrix[f"{p_idx}_{h_idx}"] = {
+                    "distance_km": distance_km,
+                    "duration_min": duration_min,
+                    "path": path_lat_lon
+                }
+            dist_matrix.append(p_row)
+            
+        st.session_state[gis_key] = {
+            "patients": pats_coords,
+            "routes": routes_matrix,
+            "distance_matrix": dist_matrix
+        }
+        
+    gis_data = st.session_state[gis_key]
+    severity = np.array([p["severity"] for p in gis_data["patients"]])
+    distance = np.array(gis_data["distance_matrix"])
 else:
     severity = np.random.randint(1, 4, n_patients)
     distance = np.random.randint(1, 20, (n_patients, n_hospitals))
-hospitals = [f"H{i+1}" for i in range(n_hospitals)]
+    hospitals = [f"H{i+1}" for i in range(n_hospitals)]
 
 # AI Advisor Settings in sidebar
 with st.sidebar.expander("🤖 AI Advisor Settings"):
@@ -1322,7 +1484,7 @@ if st.session_state.optimization_results is not None:
     scenario = res.get("scenario", "Custom")
     
     # Tab layouts
-    tab1, tab2, tab3 = st.tabs(["📊 Allocation Results", "📈 Visualization Dashboard", "🔬 Quantum Formulation"])
+    tab1, tab_map, tab2, tab3 = st.tabs(["📊 Allocation Results", "🌍 Real-Time GIS Dispatch Map", "📈 Visualization Dashboard", "🔬 Quantum Formulation"])
     
     with tab1:
         col1, col2 = st.columns(2)
@@ -1371,6 +1533,116 @@ if st.session_state.optimization_results is not None:
             
         st.metric("Total Severity-Distance Cost Score (lower is better)", f"{best_cost:.2f}")
         
+    with tab_map:
+        st.subheader("🌍 Real-Time GIS Dispatch Map")
+        if scenario in GIS_PRESETS:
+            preset = GIS_PRESETS[scenario]
+            gis_key = f"gis_data_{scenario}"
+            if gis_key in st.session_state:
+                gis_data = st.session_state[gis_key]
+                patients_coords = gis_data["patients"]
+                routes = gis_data["routes"]
+                
+                # Import folium and streamlit_folium inside the tab block dynamically
+                import folium
+                from streamlit_folium import folium_static
+                
+                # Create map centered on preset center
+                m = folium.Map(location=preset["center"], zoom_start=12, control_scale=True)
+                
+                # Plot hospitals
+                # Saturation is calculated from current assignments
+                usage = {h: 0 for h in hospitals}
+                for p_idx, h_idx in enumerate(assignment_vec):
+                    usage[hospitals[h_idx]] += 1
+                
+                for h_name in hospitals:
+                    h_info = preset["hospitals"][h_name]
+                    coord = h_info["coord"]
+                    # Calculate saturation
+                    cap = beds[h_name]
+                    allocated = usage[h_name]
+                    saturation = (allocated / cap) * 100 if cap > 0 else 0
+                    
+                    # Determine marker color and status
+                    if saturation < 70:
+                        color = "green"
+                        status = "Stable (Operational)"
+                    elif saturation < 85:
+                        color = "orange"
+                        status = "Warning: Saturation Elevated"
+                    else:
+                        color = "red"
+                        status = "CRITICAL BOTTLEMAN / SATURATED"
+                    
+                    tooltip = f"Hospital {h_name}: {h_info['name']}"
+                    popup_html = f"""
+                    <div style="font-family: Arial, sans-serif; font-size: 13px; line-height: 1.4;">
+                        <b style="color: #1E3A8A;">🏥 Hospital {h_name}</b><br/>
+                        <b>Name:</b> {h_info['name']}<br/>
+                        <b>Allocated ICU Beds:</b> {allocated}/{cap} ({saturation:.1f}% Saturation)<br/>
+                        <b>Status:</b> <span style="color: {color}; font-weight: bold;">{status}</span>
+                    </div>
+                    """
+                    
+                    folium.Marker(
+                        location=coord,
+                        popup=folium.Popup(popup_html, max_width=300),
+                        tooltip=tooltip,
+                        icon=folium.Icon(color=color, icon="hospital-o", prefix="fa")
+                    ).add_to(m)
+                
+                # Plot patients and active routing paths
+                for p_idx, p in enumerate(patients_coords):
+                    assigned_h_idx = assignment_vec[p_idx]
+                    assigned_h_name = hospitals[assigned_h_idx]
+                    
+                    # Color based on severity
+                    sev_colors = {3: "red", 2: "orange", 1: "green"}
+                    sev_names = {3: "Critical (🔴)", 2: "Urgent (🟡)", 1: "Stable (🟢)"}
+                    color = sev_colors.get(p["severity"], "blue")
+                    
+                    tooltip = f"Patient {p_idx+1}: {p['name']}"
+                    popup_html = f"""
+                    <div style="font-family: Arial, sans-serif; font-size: 13px; line-height: 1.4;">
+                        <b style="color: #1E3A8A;">🚑 Patient-{p_idx+1} ({p['name']})</b><br/>
+                        <b>Severity:</b> <span style="color: {color}; font-weight: bold;">{sev_names[p['severity']]}</span><br/>
+                        <b>Symptoms:</b> {', '.join(p['symptoms'])}<br/>
+                        <b>Assigned to:</b> Hospital {assigned_h_name} ({preset['hospitals'][assigned_h_name]['name']})
+                    </div>
+                    """
+                    
+                    # Add patient marker
+                    folium.CircleMarker(
+                        location=[p["lat"], p["lon"]],
+                        radius=8,
+                        popup=folium.Popup(popup_html, max_width=300),
+                        tooltip=tooltip,
+                        color=color,
+                        fill=True,
+                        fill_color=color,
+                        fill_opacity=0.7
+                    ).add_to(m)
+                    
+                    # Draw OSRM route path
+                    route_key = f"{p_idx}_{assigned_h_idx}"
+                    if route_key in routes:
+                        r_info = routes[route_key]
+                        folium.PolyLine(
+                            locations=r_info["path"],
+                            color=color,
+                            weight=3.5,
+                            opacity=0.85,
+                            tooltip=f"Route for {p['name']} -> Hospital {assigned_h_name} ({r_info['distance_km']} km, {r_info['duration_min']} mins)"
+                        ).add_to(m)
+                
+                # Render the map
+                folium_static(m, width=1100, height=600)
+            else:
+                st.warning("GIS routing dataset is not loaded in session state.")
+        else:
+            st.info("🗺️ **Real-World GIS Map is active for Indian State Presets!** Select one of the presets in the sidebar (e.g. Bangalore Metro, Kerala Kochi Flood, or Chennai Cyclone) to generate real hospital/patient geocoded networks and display active routing polylines.")
+            
     with tab2:
         col_v1, col_v2 = st.columns(2)
         with col_v1:
