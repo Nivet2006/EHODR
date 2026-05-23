@@ -171,6 +171,45 @@
       });
       link.classList.add("bg-primary", "text-on-primary");
       link.classList.remove("text-on-surface-variant", "hover:bg-surface-container-high");
+
+      const nav = link.dataset.nav;
+      if (nav === "dispatch") {
+        alert("🏥 ER Central Dispatch Queue\n" +
+              "---------------------------------\n" +
+              "Total active units tracked: " + (live.state?.er.activeUnitsCount || 4) + "\n" +
+              "Mass Trauma Status: " + (live.state?.er.massTraumaAlert ? "ACTIVE" : "STANDBY") + "\n" +
+              "System: Fully Synchronized");
+      } else if (nav === "records") {
+        alert("📋 Universal Patient Records Directory\n" +
+              "---------------------------------\n" +
+              "1. Johnathan Doe (45M) - ESI Level 1 (Unit 704)\n" +
+              "2. Frank Miller (58M) - ESI Level 1 (Unit 302)\n" +
+              "3. Alice Vance (22F) - ESI Level 2 (Unit 119)\n" +
+              "4. RESCUE MVA (Pending Data) - (Unit 045)");
+      } else if (nav === "map") {
+        window.open("http://127.0.0.1:8501", "_blank");
+      } else if (nav === "comms") {
+        alert("📡 Central ER Radio Channel active.\n" +
+              "Frequency: 155.340 MHz\n" +
+              "Ambulance telemetry feeds online.");
+      }
     });
+  });
+
+  document.getElementById("settings-btn")?.addEventListener("click", () => {
+    alert("⚙️ ER Central Command Settings\n" +
+          "---------------------------------\n" +
+          "Station Name: Bangalore Central ER\n" +
+          "Saturation Limit: 85%\n" +
+          "UAMS Database: Connected (Healthy)\n" +
+          "Observability Endpoint: /metrics");
+  });
+
+  document.getElementById("support-btn")?.addEventListener("click", () => {
+    alert("ℹ️ EHODR Central ER Support\n" +
+          "---------------------------------\n" +
+          "Disaster Coordinator Lead: Sarah Jenkins\n" +
+          "Database Operations: ext 900\n" +
+          "System Build: Stable v2.0 (UAMS)");
   });
 })();

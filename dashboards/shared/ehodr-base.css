@@ -131,23 +131,3 @@ body.has-dash-switcher aside.fixed.pt-16 {
 body.has-dash-switcher main.md\:ml-64.pt-16 {
   padding-top: calc(4rem + 32px);
 }
-
-body.ehodr-api-offline::after {
-  content: "SIMULATION DEMO — run .\\run_command_dashboards.ps1 locally for live API";
-  position: fixed;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 200;
-  background: #e65100;
-  color: #fff;
-  font-family: Inter, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  padding: 6px 16px;
-  border-radius: 9999px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}

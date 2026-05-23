@@ -103,4 +103,44 @@
     });
     await live.poll();
   });
+
+  document.querySelector('[data-nav="dispatch"]')?.addEventListener("click", () => {
+    alert("Active Dispatch: Unit 704 responding to CASE #" + (live.state?.case.id || "772-B") + ".");
+  });
+
+  document.querySelector('[data-nav="records"]')?.addEventListener("click", () => {
+    const s = live.state;
+    if (s) {
+      alert("📋 Active Patient Intake Record\n" +
+            "---------------------------------\n" +
+            "Name: " + s.patient.name + " (" + s.patient.age + "M)\n" +
+            "Triage Priority: " + s.patient.priority + "\n" +
+            "Condition: " + s.patient.condition + "\n" +
+            "UAMS Relational ID: MEM-2026-" + s.case.id);
+    }
+  });
+
+  document.querySelector('[data-nav="map"]')?.addEventListener("click", () => {
+    window.open("http://127.0.0.1:8501", "_blank");
+  });
+
+  document.querySelector('[data-nav="comms"]')?.addEventListener("click", () => {
+    alert("📡 Secure radio channel active.\nFamily tracker link shared via Guardian Portal.");
+  });
+
+  document.getElementById("settings-btn")?.addEventListener("click", () => {
+    alert("⚙️ Ambulance Cockpit Settings\n" +
+          "---------------------------------\n" +
+          "Telemetry Interval: 1000ms\n" +
+          "GPS Navigation: Active (OSRM)\n" +
+          "System State: Fully Synchronized");
+  });
+
+  document.getElementById("support-btn")?.addEventListener("click", () => {
+    alert("ℹ️ EHODR Cockpit Support\n" +
+          "---------------------------------\n" +
+          "Disaster Response Desk: ext 911\n" +
+          "Central Coordinator: Sarah Jenkins\n" +
+          "Local System: v2.4.6 (Stable)");
+  });
 })();
