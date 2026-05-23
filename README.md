@@ -190,16 +190,58 @@ Three Indian city presets with real hospital geocoordinates, OSRM live road rout
 
 ## 🌐 HTML Command Dashboard Hub
 
-Standalone multi-role interface at `http://localhost:8080` — no Streamlit required.
+Standalone multi-role interface served at `http://127.0.0.1:8080/index.html` — no complex Streamlit builds required. Each role-specific dashboard is fully reactive and polls the shared real-time API.
 
-| Dashboard | URL | Audience |
-|---|---|---|
-| **Command Hub** | `/index.html` | Entry point — role selector |
-| **Ambulance Command** | `/ambulance.html` | Paramedic: Unit 704 cockpit, vitals, hospital readiness |
-| **Guardian Portal** | `/guardian.html` | Family: ambulance ETA, journey timeline, secure chat |
-| **ER Command Center** | `/er-command.html` | Hospital: incoming units, capacity monitor, regional map |
+### 🗺️ Visual Feature Walkthrough
 
-Built with Material Design 3 tokens (`ehodr-base.css`), Inter/Plus Jakarta Sans fonts, and a shared navigation bar (`nav.js`).
+#### 1. Unified Dashboard Hub (`index.html`)
+The single entry point for coordinators, paramedics, patients' families, and ER managers. It displays a live global status ticker at the header and features role selector cards utilizing smooth hover zoom effects.
+
+![Unified Dashboard Hub](dashboards/screenshots/hub.png)
+
+- **Status Banner**: Real-time ticker showing active patient names, unit status, latest heart rates, and exact minute ETAs.
+- **Micro-Interactions**: Curated Material Design 3 surface tokens and responsive SVG grid styling.
+
+---
+
+#### 2. Paramedic Cockpit / Ambulance Command (`ambulance.html`)
+The real-time cockpit for Unit 704. It captures high-resolution telemetry, displays live navigation routing, and coordinates ER bay readiness.
+
+| Standard Mode | Emergency Override Mode |
+|---|---|
+| ![Ambulance Normal](dashboards/screenshots/ambulance_normal.png) | ![Ambulance Override](dashboards/screenshots/ambulance_override.png) |
+
+* **Live EKG & Vitals**: Animated SVG heart rate pulse lines fluctuating in real-time. Mean arterial pressure is auto-calculated dynamically every 3 seconds.
+* **Telemedicine Portal**: Fast pre-arrival triggers and one-click specialist telemetry pushes.
+* **paramedic Controls**:
+  - **LOG MEDS**: Record drug administrations en route. Appends a structured saline/fentanyl card directly into the scrolling paramedic log.
+  - **UPDATE TRIAGE**: Prompts the paramedic to dynamically change ESI classifications, synchronizing immediately across the central ER dispatch.
+  - **EMERGENCY OVERRIDE**: Activating this triggers a flashing red warning outline ring across the cockpit frame, signals traffic systems to clear routes, and forces the central ER incoming queue card into priority status.
+
+---
+
+#### 3. Guardian Portal (`guardian.html`)
+A reassuring, patient-centric view designed for families tracking active emergency dispatches.
+
+![Guardian Chat & Journey Timeline](dashboards/screenshots/guardian_chat.png)
+
+- **Journey Timeline**: Displays structured milestone tracking (Dispatched → In Transit → Handover) using green success nodes and active pulse markers.
+- **Secure Coordinator Chat**: Families can send messages instantly to the hospital. Features a typing indicator and returns simulated coordinate replies dynamically.
+- **Quick Actions**: One-click insurance card photo upload triggers and dynamic SMS/status sharing templates.
+
+---
+
+#### 4. ER Command Center (`er-command.html`)
+A centralized cockpit for hospital supervisors monitoring incoming ambulances, bed capacities, surgical teams, and regional saturation.
+
+| Standard View | Mass Trauma Protocol Activated |
+|---|---|
+| ![ER Command Normal](dashboards/screenshots/er_normal.png) | ![ER Command Protocol](dashboards/screenshots/er_protocol.png) |
+
+- **Incoming Tracker**: Interactive scrollable unit cards showing matching live vitals and triage states from the paramedics. Features instant fuzzy searches.
+- **Capacity Monitor**: Progress bars representing real-time ICU/trauma bay saturation.
+- **Mass Trauma Protocol**: Clicking **ACTIVATE PROTOCOL** immediately places all trauma bays on standby, updates available beds to zero, and forces saturation meters to `100%`.
+- **Dismiss Alert**: Clear active warning banners once multiple casualty situations are controlled.
 
 ---
 
