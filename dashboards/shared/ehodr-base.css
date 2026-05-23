@@ -131,3 +131,50 @@ body.has-dash-switcher aside.fixed.pt-16 {
 body.has-dash-switcher main.md\:ml-64.pt-16 {
   padding-top: calc(4rem + 32px);
 }
+
+/* Premium Custom Map Marker styling */
+.custom-map-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-hospital-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Pulsing ring for the ambulance marker on the map */
+.custom-map-marker .bg-primary {
+  box-shadow: 0 0 0 rgba(220, 38, 38, 0.4);
+  animation: marker-pulse 2s infinite;
+}
+
+@keyframes marker-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+/* Premium Leaflet popup adjustments */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  font-family: 'Inter', sans-serif !important;
+  padding: 4px !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+

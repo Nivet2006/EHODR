@@ -2,6 +2,89 @@
   const live = window.EHODR.live;
   const etaMin = window.EHODR.etaMinutes;
 
+  // Leaflet map elements and high-fidelity Bangalore route coordinate path
+  let map, marker, hospitalMarker, routeLine;
+  const ROUTE_COORDS = [
+    [12.9716, 77.5946], // Kantarava Stadium / Central Bangalore
+    [12.9705, 77.5995], // Hudson Circle
+    [12.9668, 77.6067], // Richmond Road
+    [12.9642, 77.6134], // Richmond Flyover
+    [12.9628, 77.6210], // Victoria Layout
+    [12.9610, 77.6285], // Domlur Flyover
+    [12.9598, 77.6360], // Inner Ring Rd junction
+    [12.9595, 77.6410], // Old Airport Road
+    [12.9592, 77.6444]  // St. Jude Medical Center / Destination
+  ];
+
+  function interpolateRoute(coords, progress) {
+    if (progress <= 0) return coords[0];
+    if (progress >= 1) return coords[coords.length - 1];
+    
+    const totalSegments = coords.length - 1;
+    const rawIndex = progress * totalSegments;
+    const segmentIndex = Math.floor(rawIndex);
+    const segmentProgress = rawIndex - segmentIndex;
+    
+    const start = coords[segmentIndex];
+    const end = coords[segmentIndex + 1];
+    
+    const lat = start[0] + (end[0] - start[0]) * segmentProgress;
+    const lon = start[1] + (end[1] - start[1]) * segmentProgress;
+    
+    return [lat, lon];
+  }
+
+  function initMap(mapId) {
+    const el = document.getElementById(mapId);
+    if (!el || typeof L === 'undefined') return;
+
+    try {
+      map = L.map(mapId, {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([12.9628, 77.6210], 13);
+
+      // CartoDB Positron sleek gray tile layer
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20
+      }).addTo(map);
+
+      // Custom divIcon for glowing pulsing ambulance marker
+      const ambulanceIcon = L.divIcon({
+        className: 'custom-map-marker',
+        html: '<div class="w-6 h-6 bg-primary rounded-full border-2 border-white flex items-center justify-center shadow-lg"><span class="material-symbols-outlined text-white text-xs" style="font-variation-settings: \'FILL\' 1; font-size: 14px;">emergency_share</span></div>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      // Custom divIcon for hospital
+      const hospitalIcon = L.divIcon({
+        className: 'custom-hospital-marker',
+        html: '<div class="w-8 h-8 bg-secondary rounded-full border-2 border-white flex items-center justify-center shadow-lg"><span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: \'FILL\' 1; font-size: 18px;">local_hospital</span></div>',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      // Plot solid dotted route line
+      routeLine = L.polyline(ROUTE_COORDS, {
+        color: '#1E3A8A',
+        weight: 4,
+        opacity: 0.8,
+        dashArray: '5, 8'
+      }).addTo(map);
+
+      hospitalMarker = L.marker(ROUTE_COORDS[ROUTE_COORDS.length - 1], { icon: hospitalIcon }).addTo(map);
+      hospitalMarker.bindPopup('<b>St. Jude Medical Center</b><br>Emergency Intake Bay 4');
+
+      marker = L.marker(ROUTE_COORDS[0], { icon: ambulanceIcon }).addTo(map);
+      
+      // Open hospital popup by default
+      setTimeout(() => hospitalMarker.openPopup(), 500);
+    } catch (e) {
+      console.error("Map initialization failed: ", e);
+    }
+  }
+
   const els = {
     patient: document.getElementById("patient-name"),
     status: document.getElementById("transit-status"),
@@ -148,6 +231,18 @@
     if (els.coordinatorStatus) {
       els.coordinatorStatus.textContent =
         "Medical Coordinator • " + (s.guardian.coordinator.online ? "Online" : "Away");
+    }
+
+    // Dynamic Leaflet Map updates matching simulated GPS ticks
+    if (!map) {
+      initMap("guardian-map");
+    }
+    if (map && marker && s.transport) {
+      // In guardian mode, distance is simulated in miles (start at 3.2 mi)
+      const progress = Math.max(0, Math.min(1, 1 - (s.transport.distanceMi / 3.2)));
+      const currentCoord = interpolateRoute(ROUTE_COORDS, progress);
+      marker.setLatLng(currentCoord);
+      map.panTo(currentCoord);
     }
   }
 

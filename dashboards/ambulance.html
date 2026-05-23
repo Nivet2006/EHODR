@@ -7,6 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="shared/ehodr-base.css" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <script src="shared/ehodr-theme.js"></script>
 <style>body { background-color: #F8FAFC; }</style>
 </head>
@@ -114,7 +115,8 @@
 </div>
 </div>
 <div class="col-span-4 flex flex-col gap-gutter">
-<div class="bg-white border border-outline-variant rounded-xl flex-1 relative overflow-hidden flex flex-col">
+<div class="bg-white border border-outline-variant rounded-xl flex-1 relative overflow-hidden flex flex-col min-h-[350px]">
+<div id="ambulance-map" class="flex-grow z-0 min-h-[280px]"></div>
 <div class="absolute top-md left-md z-10 bg-white/90 backdrop-blur-md p-md rounded-lg border border-outline-variant shadow-lg w-64">
 <div class="flex flex-col gap-xs">
 <span class="font-label-caps text-[10px] text-secondary">DESTINATION</span>
@@ -124,14 +126,6 @@
 <div><span class="text-[10px] font-label-caps text-on-surface-variant">DISTANCE</span><div id="dist-km" class="font-body-bold">1.4 km</div></div>
 <div class="text-right"><span class="text-[10px] font-label-caps text-on-surface-variant">TRAFFIC</span><div id="traffic-level" class="text-error font-body-bold">MODERATE</div></div>
 </div>
-</div>
-</div>
-<div class="flex-1 bg-surface-container relative">
-<img class="w-full h-full object-cover grayscale-[0.2]" alt="GPS navigation map with emergency route" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrrunnJG2deFMPtyaUJIXSb9QMvDfe1YKEWBRbpC_UnW5ZDQYHH6k1eMiYeqC8MGBPvJquSMqSRoXjJeWFU-isdzRjBlBME-WHdgNfnkmcqJW7P3pkHWFNF2qHi1sEFTTtoua7tZL5pcDXam-SbTkN9aS9mUeNcX5rUntcG8FdcVfr40wXR8_m8O4-f5Tkztf1lDFNgA7oUnud4vE7d_O2JRfzrorKeHn7iwH7sO1wghGl44IELtqDh7fUrVpz_eZiSW92bodteSs"/>
-<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center ring-4 ring-primary/20 animate-ping absolute"></div>
-<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center relative shadow-lg">
-<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">emergency_share</span>
 </div>
 </div>
 </div>
@@ -172,6 +166,7 @@
 </div>
 </div>
 </main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="shared/nav.js"></script>
 <script src="shared/live-data.js"></script>
 <script src="shared/ambulance-app.js"></script>
