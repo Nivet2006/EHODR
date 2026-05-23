@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file to compile wheels
-COPY requirements.txt .
+COPY gateway/requirements.txt .
 
 # Build wheels in a cache-mounted local directory
 RUN pip install --no-cache-dir -r requirements.txt
@@ -39,11 +39,12 @@ RUN groupadd -g 1000 appgroup && \
 # Mount persistent log folder and configure rights
 RUN mkdir -p /app/logs && chown -R appuser:appgroup /app
 
-# Copy application source code
-COPY --chown=appuser:appgroup . .
+# Copy application source code under a proper gateway package namespace
+COPY --chown=appuser:appgroup gateway/ ./gateway/
+ENV PYTHONPATH=/app
 
 # Switch container process user
 USER appuser
 
 # Launch the FastAPI application using standard, production-grade Uvicorn parameters
-CMD ["uvicorn", "main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "gateway.main:app", "--host", "0.0.0.0", "--port", "8000"]

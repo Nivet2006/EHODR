@@ -2,7 +2,8 @@ services:
   gateway:
     environment:
       - LOG_LEVEL=DEBUG
+      - PYTHONPATH=/app
     volumes:
-      - ./gateway:/app
+      - ./gateway:/app/gateway
       - gateway_logs:/app/logs
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn gateway.main:app --host 0.0.0.0 --port 8000 --reload

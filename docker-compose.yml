@@ -1,8 +1,8 @@
 services:
   gateway:
     build:
-      context: ./gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: gateway/Dockerfile
     container_name: ai_memory_gateway
     restart: unless-stopped
     ports:
