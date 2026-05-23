@@ -8,11 +8,13 @@ This document outlines the evolutionary architectural roadmap for the **Emergenc
 
 ```mermaid
 graph TD
-    A[Current EHODR Dashboard] --> B[Phase 1: Geographic & Time-Stepped dispatch]
+    A[Current EHODR Dashboard] --> B[Phase 1: Geographic & Time-Stepped Dispatch]
     A --> C[Phase 2: Dynamic AI Command Center]
     B --> D[Phase 3: Hybrid Classical-Quantum Core]
     C --> D
-    D --> E[Phase 4: Real QPU Hardware Execution & IoT Sensors]
+    D --> E[Phase 4: Real QPU Hardware & IoT Sensors]
+    E --> F[Phase 5: AI Swarm & Blockchain Provenance]
+    F --> G[Phase 6: Spatial Mixed Reality Command Center]
 ```
 
 ---
@@ -118,3 +120,54 @@ graph TD
   * **IoT Smart Beds**: Automatically update regional bed counts as physical pressure-sensor pads on beds register a patient.
   * **IoT Ventilator Status**: Automatically decrement ventilator availability the moment an active mechanical breathing loop is initiated in an ICU ward.
   * This creates a fully automated, hands-free regional dispatch coordinator.
+
+---
+
+## 🤖 Phase 9: Multi-Agent AI Swarm Dispatchers
+
+### A. Autonomous Collaborative Triage & Routing
+* **Objective**: Introduce a collaborative multi-agent AI swarm to manage dynamic triage, transport, and clinical preparation autonomously.
+* **Technical Specification**:
+  * Utilize agentic frameworks (e.g., LangGraph or AutoGen) to launch a decentralized coordinator swarm:
+    * **Paramedic Agent**: Monitors active cockpit EKG telemetry and submits secure en-route diagnostic files.
+    * **Hospital Logistics Agent**: Tracks real-time smart beds and ventilator states, automatically negotiating emergency intake queues.
+    * **GIS Dispatch Agent**: Constantly monitors municipal traffic, weather disruptions, and blocked route vectors.
+    * **Weather Monitor Agent**: Watches storm progress to alert of impending blockages or power failures.
+  * **Core Capabilities**:
+    * Instead of a single static solver call, the agents hold a dynamic negotiation debate to allocate arriving patients based on clinical suitability and live resource constraints.
+
+---
+
+## 📈 Phase 10: Deep Reinforcement Learning Policy Core
+
+### A. Dynamic Policy Optimization
+* **Objective**: Evolve the static classical and quantum solver parameters using Deep Reinforcement Learning (DRL) models trained on past mass casualty incidents.
+* **Technical Specification**:
+  * Implement a **Deep Q-Network (DQN)** or **Proximal Policy Optimization (PPO)** agent inside the core solver engine.
+  * Train the model inside a simulated environment where incoming Poisson casualty waves, weather blockages, and clinical bottle-necks fluctuate continuously.
+  * **Parameter Auto-Tuning**: The RL agent dynamically adjusts the QUBO penalty coefficients ($A$ and $B$) and severity distance weights in real-time based on system-wide survival rates, matching allocation strategies to the disaster type.
+
+---
+
+## ⛓️ Phase 11: Privacy-Preserving Blockchain Provenance
+
+### A. Immutable Patient Triage Trails
+* **Objective**: Guarantee absolute data integrity, audit trails, and privacy compliance for patient logs across multiple hospital jurisdictions.
+* **Technical Specification**:
+  * Integrate a permissioned ledger (e.g., **Hyperledger Fabric**) to log patient triage admissions, telemetry logs, and en-route paramedic medication delivery immutably.
+  * **Zero-Knowledge Proofs (ZKPs)**: Use cryptographic ZKPs to verify patient severity levels, priority ranks, and triage qualifications without exposing names or sensitive personal identifiable information (PII) on the ledger.
+  * **Smart Contracts**: Auto-execute trauma bay reservations and clinical specialist paging the moment a patient passes a secure verification check en route.
+
+---
+
+## 🥽 Phase 12: Spatial Mixed Reality Tactical Command Center
+
+### A. AR/VR EOC Hologram Map
+* **Objective**: Provide disaster response chiefs with a fully immersive, 3D spatial computing tactical command center (compatible with Apple Vision Pro or Meta Quest 3).
+* **Technical Specification**:
+  * Deploy a WebXR-compatible spatial interface rendering real-world OSRM roads, geocoded hospital structures, and active ambulance positions in a three-dimensional hologram space.
+  * **Immersive Controls**:
+    * Operators can pinch and grab patient nodes in spatial 3D to view active fluctuating vitals.
+    * Drag-and-drop ambulances to alternative routes to bypass physical terrain flood blockages.
+    * The backend continuously computes active quantum QAOA allocations, rendering updated optimal paths dynamically in the operator's physical room space.
+
