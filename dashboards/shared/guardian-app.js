@@ -194,4 +194,47 @@
       alert("Status copied to clipboard.");
     }
   });
+
+  document.querySelector('[data-nav="dispatch"]')?.addEventListener("click", () => {
+    alert("Active Journey: Unit 704 en route to " + (live.state?.transport.destinationName || "St. Jude Medical Center") + ".");
+  });
+
+  document.querySelector('[data-nav="records"]')?.addEventListener("click", () => {
+    const s = live.state;
+    if (s) {
+      alert("📋 Guardian Patient Records Intake\n" +
+            "---------------------------------\n" +
+            "Patient: " + s.patient.name + "\n" +
+            "Condition: " + s.patient.condition + "\n" +
+            "Age/Priority: " + s.patient.age + " / " + s.patient.priority + "\n" +
+            "Handover Bay: " + s.hospital.traumaBay + "\n" +
+            "UAMS Secure Storage: Connected");
+    }
+  });
+
+  document.querySelector('[data-nav="map"]')?.addEventListener("click", () => {
+    window.open("http://127.0.0.1:8501", "_blank");
+  });
+
+  document.getElementById("privacy-btn")?.addEventListener("click", () => {
+    alert("🔒 Privacy Policy & HIPAA Compliance\n" +
+          "---------------------------------\n" +
+          "All patient vitals and telemetry streams are encrypted en-route using AES-256 standards.\n" +
+          " Relational UAMS memories are fully compliant with clinical HIPAA requirements.");
+  });
+
+  document.getElementById("terms-btn")?.addEventListener("click", () => {
+    alert("⚖️ Terms of Service\n" +
+          "---------------------------------\n" +
+          "EHODR provides active disaster decision-support telemetry.\n" +
+          "Intake forms and pre-registration uploads represent official triage documentations.");
+  });
+
+  document.getElementById("support-btn")?.addEventListener("click", () => {
+    alert("ℹ️ Guardian Support Center\n" +
+          "---------------------------------\n" +
+          "Family Support Desk: ext 911\n" +
+          "Emergency Bay Lead: Sarah Mitchell\n" +
+          "Radio Dispatch Feed: Online");
+  });
 })();
