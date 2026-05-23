@@ -11,7 +11,7 @@
 <script src="shared/ehodr-theme.js"></script>
 <style>body { background-color: #F8FAFC; }</style>
 </head>
-<body class="bg-background text-on-surface font-body-base overflow-hidden" data-dashboard="ambulance">
+<body class="bg-background text-on-surface font-body-base overflow-y-auto min-h-screen" data-dashboard="ambulance">
 <header class="flex justify-between items-center w-full px-margin-desktop h-16 z-50 fixed top-0 bg-surface border-b border-outline-variant">
 <div class="flex items-center gap-md">
 <span class="font-headline-md text-headline-md font-bold text-primary">EHODR</span>
@@ -33,7 +33,7 @@
 </div>
 </div>
 </header>
-<nav class="flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant py-lg pt-20 gap-sm">
+<nav class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant py-lg pt-20 gap-sm z-40">
 <div class="px-md mb-md">
 <div class="flex items-center gap-md p-md bg-white border border-outline-variant rounded-xl shadow-sm">
 <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">704</div>
@@ -60,7 +60,7 @@
 </div>
 </div>
 </nav>
-<main class="ml-64 pt-16 h-screen p-gutter overflow-hidden flex flex-col gap-gutter">
+<main class="md:ml-64 pt-16 min-h-screen p-gutter flex flex-col gap-gutter pb-12 overflow-y-auto">
 <div class="bg-error text-white p-4 rounded-xl flex justify-between items-center shadow-md border-l-[8px] border-tertiary">
 <div class="flex flex-col">
 <span class="font-label-caps text-[10px] opacity-80 uppercase">Current Triage Level</span>
@@ -74,8 +74,8 @@
 <button type="button" id="update-triage" class="bg-white text-error px-6 py-2 rounded-lg font-body-bold hover:bg-error-container transition-colors">UPDATE TRIAGE</button>
 </div>
 </div>
-<div class="flex-1 grid grid-cols-12 gap-gutter overflow-hidden">
-<div class="col-span-5 flex flex-col gap-gutter">
+<div class="grid grid-cols-12 gap-gutter">
+<div class="col-span-12 md:col-span-5 flex flex-col gap-gutter">
 <div class="bg-white border border-outline-variant rounded-xl p-md flex-1 flex flex-col">
 <div class="flex justify-between items-center mb-md">
 <span class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-xs">
@@ -114,7 +114,7 @@
 <button type="button" data-action="log-meds" class="bg-primary text-on-primary h-20 rounded-xl font-body-bold flex flex-col items-center justify-center gap-xs hover:opacity-90 transition-opacity"><span class="material-symbols-outlined">medical_services</span>LOG MEDS</button>
 </div>
 </div>
-<div class="col-span-4 flex flex-col gap-gutter">
+<div class="col-span-12 md:col-span-4 flex flex-col gap-gutter">
 <div class="bg-white border border-outline-variant rounded-xl flex-1 relative overflow-hidden flex flex-col min-h-[350px]">
 <div id="ambulance-map" class="flex-grow z-0 min-h-[280px]"></div>
 <div class="absolute top-md left-md z-10 bg-white/90 backdrop-blur-md p-md rounded-lg border border-outline-variant shadow-lg w-64">
@@ -135,7 +135,7 @@
 </div>
 </div>
 </div>
-<div class="col-span-3 flex flex-col gap-gutter">
+<div class="col-span-12 md:col-span-3 flex flex-col gap-gutter">
 <div class="bg-white border border-outline-variant rounded-xl p-md flex-1 flex flex-col">
 <div class="flex justify-between items-center mb-md">
 <span class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-xs"><span class="material-symbols-outlined text-primary">domain</span> HOSPITAL READINESS</span>
