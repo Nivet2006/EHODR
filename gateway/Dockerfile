@@ -1,36 +1,19 @@
 # ==============================================================================
-# STAGE 1: Dependency Builder
+# Production-grade Container Image for UAMS Gateway Service
 # ==============================================================================
-FROM python:3.11-slim AS builder
-
-WORKDIR /build
-
-# Install system dependencies needed for compiling python libraries
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements file to compile wheels
-COPY gateway/requirements.txt .
-
-# Build wheels in a cache-mounted local directory
-RUN pip install --no-cache-dir -r requirements.txt
-
-# ==============================================================================
-# STAGE 2: Lightweight Runtime Runner
-# ==============================================================================
-FROM python:3.11-slim AS runner
+FROM python:3.11-slim
 
 WORKDIR /app
 
 # Expose standard gateway port
 EXPOSE 8000
 
-# Set environment paths to access pre-compiled packages
-COPY --from=builder /usr/local /usr/local
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+
+# Copy requirements file and install dependencies directly
+COPY gateway/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && rm requirements.txt
 
 # Create an unprivileged user to secure container boundaries
 RUN groupadd -g 1000 appgroup && \
@@ -39,9 +22,9 @@ RUN groupadd -g 1000 appgroup && \
 # Mount persistent log folder and configure rights
 RUN mkdir -p /app/logs && chown -R appuser:appgroup /app
 
-# Copy application source code under a proper gateway package namespace
+# Copy application source code into a package subdirectory 'gateway'
+# to support standard package-level relative/absolute imports (e.g. from gateway.xxx)
 COPY --chown=appuser:appgroup gateway/ ./gateway/
-ENV PYTHONPATH=/app
 
 # Switch container process user
 USER appuser

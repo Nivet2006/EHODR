@@ -365,6 +365,11 @@ optimizer_type = st.sidebar.selectbox("Active optimization algorithm",
 if optimizer_type == "QAOA (Quantum)":
     qaoa_reps = st.sidebar.slider("QAOA circuit layers (reps)", 1, 4, 2, help="Higher reps improve convergence accuracy but slow down simulation runs.")
     penalty = st.sidebar.slider("Constraint penalty strength", 10.0, 100.0, 50.0, step=10.0)
+    
+    # Scale warning notice in sidebar
+    num_qubits = n_patients * n_hospitals
+    if n_patients >= 6 or num_qubits >= 18:
+        st.sidebar.warning(f"⚠️ **Scale Notice**: A grid with {n_patients} patients ({num_qubits} qubits) is too large for classical QAOA simulation. The optimizer will automatically route to Simulated Annealing (Quantum‑Inspired) to prevent memory crashes and execute instantly!")
 else:
     qaoa_reps = None
     penalty = 50.0
@@ -512,13 +517,13 @@ elif scenario in GIS_PRESETS:
                 "lat": p_lat,
                 "lon": p_lon,
                 "severity": p_sev,
-                "symptoms": np.random.choice([
-                    ["Chest Pain / Cardiac Symptoms"],
-                    ["Respiratory Distress / Difficulty Breathing"],
-                    ["Severe Trauma / Lacerations"],
-                    ["Moderate Pain / Sprains"],
-                    ["Minor Scratches / Contusions"]
-                ])
+                "symptoms": [np.random.choice([
+                    "Chest Pain / Cardiac Symptoms",
+                    "Respiratory Distress / Difficulty Breathing",
+                    "Severe Trauma / Lacerations",
+                    "Moderate Pain / Sprains",
+                    "Minor Scratches / Contusions"
+                ])]
             })
             
         # Build routing matrix
@@ -868,10 +873,19 @@ if run_btn:
         st.sidebar.error("❌ Cannot execute: The registrar patient pool is empty. Register at least one patient first.")
         st.stop()
         
-    with st.spinner(f"Running optimization model utilizing {optimizer_type}..."):
+    # Dynamic QAOA Routing Check
+    qaoa_redirected = False
+    active_optimizer = optimizer_type
+    if active_optimizer == "QAOA (Quantum)":
+        num_qubits = n_patients * len(hospitals)
+        if n_patients >= 6 or num_qubits >= 18:
+            qaoa_redirected = True
+            active_optimizer = "Simulated Annealing (Quantum‑Inspired)"
+
+    with st.spinner(f"Running optimization model utilizing {active_optimizer}..."):
         start_time = time.time()
         
-        if optimizer_type == "QAOA (Quantum)":
+        if active_optimizer == "QAOA (Quantum)":
             if not HAS_QISKIT:
                 st.error(f"❌ Qiskit and Qiskit-Optimization are not fully loaded in this environment: {QISKIT_ERROR}")
                 st.info("💡 Pro-tip: You can use the Simulated Annealing or Classical Solvers which run natively on any device!")
@@ -879,7 +893,7 @@ if run_btn:
                 
             # Limit scale to prevent memory exhaustion (statevector simulation exponential scaling)
             num_qubits = n_patients * len(hospitals)
-            if num_qubits > 20:
+            if num_qubits > 18:
                 memory_bytes = (2 ** num_qubits) * 16
                 if memory_bytes >= 1024**4:
                     memory_str = f"{memory_bytes / (1024**4):.1f} TB"
@@ -888,14 +902,14 @@ if run_btn:
                 else:
                     memory_str = f"{memory_bytes / (1024**2):.1f} MB"
                     
-                st.error(f"⚠️ **Simulation Scale Limitation**: QAOA Quantum Simulation is capped at 20 qubits (variables) to prevent system memory exhaustion. Currently, your scenario requires **{num_qubits} qubits**.")
+                st.error(f"⚠️ **Simulation Scale Limitation**: QAOA Quantum Simulation is capped at 18 qubits (variables) to prevent system memory exhaustion and long CPU freezes. Currently, your scenario requires **{num_qubits} qubits**.")
                 st.markdown(f"""
                 An exact quantum statevector simulation of **{num_qubits} qubits** requires representing $2^{{{num_qubits}}}$ states in a high-dimensional complex vector space, which would consume approximately **{memory_str}** of RAM and cause a severe Out-Of-Memory crash.
                 
                 ### 💡 Quick Workarounds:
                 1. **🚀 Simulated Annealing (Quantum-Inspired)**: Choose the **Simulated Annealing** solver in the sidebar. It is extremely fast, memory-efficient, and solves the same mathematical Hamiltonian allocation model for your {n_patients}-patient grid in milliseconds!
                 2. **Exact Classical**: Choose **Exact Classical (Brute Force)**. It operates using low-memory loops.
-                3. **Reduce Grid Scale**: Set the slider inside the sidebar to **6 patients** or fewer (e.g. $6 \\times 3 = 18$ qubits) to run simulated QAOA successfully.
+                3. **Reduce Grid Scale**: Set the slider inside the sidebar to **6 patients** or fewer (e.g. $5 \\times 3 = 15$ qubits) to run simulated QAOA successfully.
                 """)
                 st.stop()
                 
@@ -903,13 +917,13 @@ if run_btn:
                 qp = build_qubo_advanced(n_patients, hospitals, beds, vents, staff, severity, distance,
                                          specialties=specialties, time_windows=time_windows, penalty=penalty)
                 
-                # Execute utilizing localized QAOA Simulator
+                # Execute utilizing localized QAOA Simulator with bounded classical optimization
                 reps_val = qaoa_reps if qaoa_reps is not None else 2
                 sampler = Sampler()  # type: ignore
                 if MODERN_QISKIT:
-                    qaoa = MinimumEigenOptimizer(QAOA(sampler=sampler, optimizer=COBYLA(), reps=reps_val))  # type: ignore
+                    qaoa = MinimumEigenOptimizer(QAOA(sampler=sampler, optimizer=COBYLA(maxiter=20), reps=reps_val))  # type: ignore
                 else:
-                    qaoa = MinimumEigenOptimizer(QAOA(sampler=sampler, reps=reps_val))  # type: ignore
+                    qaoa = MinimumEigenOptimizer(QAOA(sampler=sampler, optimizer=COBYLA(maxiter=20), reps=reps_val))  # type: ignore
                 result = qaoa.solve(qp)  # type: ignore
                 
                 qaoa_cost = result.fval  # type: ignore
@@ -935,7 +949,7 @@ if run_btn:
                 st.info("This is typically caused by constraint combinations exceeding available simulator memory. Try lowering patient count or switching solvers.")
                 st.stop()
         
-        elif optimizer_type == "Simulated Annealing (Quantum‑Inspired)":
+        elif active_optimizer == "Simulated Annealing (Quantum‑Inspired)":
             if not HAS_SIMANNEAL:
                 st.warning("⚠️ simanneal package is not installed. Running native Simulated Annealing baseline instead...")
                 # Simple native simulated annealing fallback
@@ -1035,6 +1049,7 @@ if run_btn:
             "best_cost": best_cost,
             "elapsed": elapsed,
             "optimizer_type": optimizer_type,
+            "qaoa_redirected": qaoa_redirected,
             "severity": severity.tolist() if isinstance(severity, np.ndarray) else list(severity),
             "distance": distance.tolist() if isinstance(distance, np.ndarray) else list(distance),
             "hospitals": hospitals,
@@ -1465,7 +1480,10 @@ if st.session_state.optimization_results is not None:
     res = st.session_state.optimization_results
     
     # 100% Full Width workspace for premium visual layouts and charts
-    st.success(f"🎉 Optimization Run Completed in {res['elapsed']:.4f} seconds using {res['optimizer_type']}")
+    if res.get("qaoa_redirected"):
+        st.warning(f"⚠️ **Automatic Optimizer Routing Override**: Because classical simulation of a {n_patients}-patient grid ({n_patients * len(hospitals)} qubits) is extremely CPU-heavy, the system has automatically routed this run to the **Simulated Annealing (Quantum‑Inspired)** engine to prevent browser freezes. It successfully solved the identical mathematical model in {res['elapsed']:.4f} seconds!")
+    else:
+        st.success(f"🎉 Optimization Run Completed in {res['elapsed']:.4f} seconds using {res['optimizer_type']}")
     
     # Retrieve values from state
     n_patients = res["n_patients"]
