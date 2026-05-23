@@ -1553,9 +1553,50 @@ if st.session_state.optimization_results is not None:
         
     with tab_map:
         st.subheader("🌍 Real-Time GIS Dispatch Map")
-        if scenario in GIS_PRESETS:
-            preset = GIS_PRESETS[scenario]
-            gis_key = f"gis_data_{scenario}"
+        # Normalize scenario key to handle any invisible character differences
+        _matched_preset_key = next((k for k in GIS_PRESETS if k.strip() == scenario.strip()), None)
+        if _matched_preset_key is not None:
+            preset = GIS_PRESETS[_matched_preset_key]
+            gis_key = f"gis_data_{_matched_preset_key}"
+            if gis_key not in st.session_state:
+                # Re-generate GIS data if session state was cleared (e.g. after page refresh)
+                _center = preset["center"]
+                _hospitals_list = list(preset["hospitals"].keys())
+                _names = ["Aarav Sharma", "Ananya Rao", "Aditya Patel", "Diya Nair", "Ishaan Kapoor",
+                          "Kavya Iyer", "Pranav Reddy", "Rohan Das", "Siddharth Menon", "Zara Khan",
+                          "Neha Verma", "Rahul Krishnan"]
+                _pats_coords = []
+                for _i in range(n_patients):
+                    _p_lat = _center[0] + np.random.uniform(-0.06, 0.06)
+                    _p_lon = _center[1] + np.random.uniform(-0.06, 0.06)
+                    _p_sev = int(severity[_i]) if _i < len(severity) else np.random.randint(1, 4)
+                    _pats_coords.append({
+                        "name": _names[_i % len(_names)],
+                        "lat": _p_lat,
+                        "lon": _p_lon,
+                        "severity": _p_sev,
+                        "symptoms": ["Severe Trauma / Lacerations"]
+                    })
+                _dist_matrix = []
+                _routes_matrix = {}
+                for _p_idx, _p in enumerate(_pats_coords):
+                    _p_row = []
+                    for _h_idx, _h_name in enumerate(_hospitals_list):
+                        _h_coord = preset["hospitals"][_h_name]["coord"]
+                        _dist_km, _dur_min, _path = get_road_route(_p["lat"], _p["lon"], _h_coord[0], _h_coord[1])
+                        _p_row.append(_dur_min)
+                        _routes_matrix[f"{_p_idx}_{_h_idx}"] = {
+                            "distance_km": _dist_km,
+                            "duration_min": _dur_min,
+                            "path": _path
+                        }
+                    _dist_matrix.append(_p_row)
+                st.session_state[gis_key] = {
+                    "patients": _pats_coords,
+                    "routes": _routes_matrix,
+                    "distance_matrix": _dist_matrix
+                }
+
             if gis_key in st.session_state:
                 gis_data = st.session_state[gis_key]
                 patients_coords = gis_data["patients"]
@@ -1563,23 +1604,26 @@ if st.session_state.optimization_results is not None:
                 
                 # Import folium and streamlit_folium inside the tab block dynamically
                 import folium
-                from streamlit_folium import folium_static
+                from streamlit_folium import st_folium
                 
                 # Create map centered on preset center
-                m = folium.Map(location=preset["center"], zoom_start=12, control_scale=True)
+                preset_center = preset["center"]
+                assert isinstance(preset_center, list)
+                m = folium.Map(location=preset_center, zoom_start=12, control_scale=True)
                 
                 # Plot hospitals
                 # Saturation is calculated from current assignments
-                usage = {h: 0 for h in hospitals}
+                gis_usage = {h: 0 for h in hospitals}
                 for p_idx, h_idx in enumerate(assignment_vec):
-                    usage[hospitals[h_idx]] += 1
+                    gis_usage[hospitals[h_idx]] += 1
                 
                 for h_name in hospitals:
                     h_info = preset["hospitals"][h_name]
                     coord = h_info["coord"]
+                    assert isinstance(coord, list)
                     # Calculate saturation
                     cap = beds[h_name]
-                    allocated = usage[h_name]
+                    allocated = gis_usage[h_name]
                     saturation = (allocated / cap) * 100 if cap > 0 else 0
                     
                     # Determine marker color and status
@@ -1654,10 +1698,12 @@ if st.session_state.optimization_results is not None:
                             tooltip=f"Route for {p['name']} -> Hospital {assigned_h_name} ({r_info['distance_km']} km, {r_info['duration_min']} mins)"
                         ).add_to(m)
                 
-                # Render the map
-                folium_static(m, width=1100, height=600)
+                # Render the map with a unique key to ensure proper re-render on reruns
+                import re as _re
+                _safe_key = _re.sub(r'[^a-zA-Z0-9_]', '_', _matched_preset_key)
+                st_folium(m, use_container_width=True, height=600, returned_objects=[], key=f"gis_map_{_safe_key}")
             else:
-                st.warning("GIS routing dataset is not loaded in session state.")
+                st.warning("GIS routing dataset is not loaded. Please re-run the optimization.")
         else:
             st.info("🗺️ **Real-World GIS Map is active for Indian State Presets!** Select one of the presets in the sidebar (e.g. Bangalore Metro, Kerala Kochi Flood, or Chennai Cyclone) to generate real hospital/patient geocoded networks and display active routing polylines.")
             
@@ -1671,7 +1717,8 @@ if st.session_state.optimization_results is not None:
             if scenario == "📝 Live Patient Registrar" and "registered_patients" in st.session_state and len(st.session_state.registered_patients) == n_patients:
                 y_labels = [p["name"][:10] for p in st.session_state.registered_patients]
                 
-            sns.heatmap(distance, annot=True, fmt="d", cmap="Blues", 
+            dist_display = np.array(distance, dtype=float)
+            sns.heatmap(dist_display, annot=True, fmt=".1f", cmap="Blues",
                         xticklabels=hospitals, yticklabels=y_labels, ax=ax)
             ax.set_title("Severity & Distance Factor Matrix")
             st.pyplot(fig)

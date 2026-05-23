@@ -4,6 +4,9 @@ docker compose up -d
 Write-Host "[WAIT] Waiting 5 seconds for services to boot..." -ForegroundColor Yellow
 Start-Sleep -Seconds 5
 
+Write-Host "[INFO] Installing / verifying Python dependencies..." -ForegroundColor Cyan
+& .\venv\Scripts\pip install -r requirements.txt --quiet
+
 Write-Host "[INFO] Initializing databases and vector collections..." -ForegroundColor Cyan
 & .\venv\Scripts\python.exe scripts/init_qdrant_collections.py
 
