@@ -3,11 +3,15 @@
 EHODR Live Dashboard Server
 - Serves static files from dashboards/
 - Ticks shared state every second (vitals, ETA, distance, incoming units)
-- GET  /api/state  → full JSON state snapshot
-- POST /api/chat   → append chat message, return coordinator reply
-- POST /api/action → log_med | override | update_triage
+- GET  /api/state           → full JSON state snapshot
+- POST /api/chat            → append chat message, return coordinator reply
+- POST /api/actions/*       → update-triage, emergency-override, enroute-log, dismiss-alert, activate-protocol
 """
-import json, math, random, threading, time
+import json
+import math
+import random
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -17,43 +21,154 @@ from pathlib import Path
 _lock = threading.Lock()
 
 STATE: dict = {
-    "case": "772-B",
-    "unit": "704",
-    "patient": {"name": "Johnathan Doe", "age": 45, "condition": "TRAUMA L1", "priority": "PRIORITY 1"},
-    "vitals": {"hr": 104, "spo2": 96, "bp_sys": 128, "bp_dia": 84},
-    "eta_seconds": 480,
-    "distance_km": 5.2,
-    "speed_kmh": 65.0,
-    "triage_level": "RED - CRITICAL (TRAUMA)",
-    "hospital": "St. Jude Medical Center",
-    "bay": "ER Bay 4",
-    "er_capacity": {"beds_available": 3, "beds_total": 24, "trauma_available": 1, "trauma_total": 4},
-    "incoming_units": [
-        {"id": "704", "type": "BLS-A", "condition": "Chest Pain, Tachypnea", "patient": "45M", "severity": "CRITICAL",
-         "eta": 8, "vital_label": "HEART RATE", "vital_value": 104},
-        {"id": "302", "type": "BLS-A", "condition": "Chest Pain, Tachypnea", "patient": "58M", "severity": "CRITICAL",
-         "eta": 4, "vital_label": "HEART RATE", "vital_value": 142},
-        {"id": "119", "type": "ALS-B", "condition": "Lower Limb Fracture",   "patient": "22F", "severity": "STABLE",
-         "eta": 12, "vital_label": "O2 SAT",    "vital_value": 98},
-        {"id": "045", "type": "RESCUE","condition": "Dispatched to MVA A-12","patient": "—",   "severity": "PENDING DATA",
-         "eta": 19, "vital_label": "STATUS",    "vital_value": "EN ROUTE"},
+    "case": {
+        "id": "772-B",
+        "label": "TRAUMA L1",
+        "triageLevel": "RED - CRITICAL (TRAUMA)",
+    },
+    "patient": {
+        "name": "Johnathan Doe",
+        "age": 45,
+        "condition": "TRAUMA L1",
+        "priority": "PRIORITY 1"
+    },
+    "vitals": {
+        "heartRate": 104,
+        "spo2": 96,
+        "bpSystolic": 128,
+        "bpDiastolic": 84,
+        "bpMean": 98
+    },
+    "transport": {
+        "etaSeconds": 480,
+        "distanceKm": 5.2,
+        "distanceMi": 3.2,
+        "speedMph": 40.0,
+        "speedKmh": 65.0,
+        "traffic": "MODERATE",
+        "navigationHint": "Main St. Clear — Take 4th exit",
+        "destinationName": "St. Jude Medical Center",
+        "destinationDetail": "ER Bay 4"
+    },
+    "hospital": {
+        "traumaBay": "Bay #4 Secured",
+        "traumaBayNote": "Team scrubbed in. Blood units O- ready.",
+        "specialist": {
+            "name": "Dr. Sarah Vance",
+            "role": "NEUROSURGEON"
+        }
+    },
+    "enRouteLog": [
+        {"title": "Intravenous Started", "detail": "20 ml Saline | R-Arm", "time": "17:40"},
+        {"title": "Oxygen Therapy", "detail": "15L/min Non-Rebreather", "time": "17:45"}
     ],
-    "chat_messages": [
-        {"from": "coordinator", "text": "Hello. I'm the coordinator for Unit 704. Johnathan is stable and receiving supplemental oxygen. Any questions?", "time": "14:18"},
-        {"from": "family",      "text": "Thank you. Which entrance at St. Mary's?", "time": "14:22"},
-        {"from": "coordinator", "text": "Head directly to Emergency Bay A. I've pre-registered your arrival.", "time": "14:23"},
-    ],
-    "enroute_log": [
-        {"text": "Intravenous Started", "detail": "20 ml Saline | R-Arm"},
-    ],
-    "override_active": False,
+    "guardian": {
+        "timeline": [
+            {"title": "Ambulance Dispatched", "detail": "Unit 704 responding", "time": "17:15", "status": "done"},
+            {"title": "En Route to Hospital", "detail": "ETA 8 minutes", "time": "17:20", "status": "active"},
+            {"title": "ER Handover", "detail": "Trauma Bay #4 standing by", "time": "pending", "status": "pending"}
+        ],
+        "chat": [
+            {"from": "coordinator", "text": "Hello. I'm the coordinator for Unit 704. Johnathan is stable and receiving supplemental oxygen. Any questions?", "time": "17:18"},
+            {"from": "guardian",    "text": "Thank you. Which entrance at St. Jude's?", "time": "17:22"},
+            {"from": "coordinator", "text": "Head directly to Emergency Bay 4. I've pre-registered your arrival.", "time": "17:23"}
+        ],
+        "typing": False,
+        "forms": [
+            {"id": "insurance", "label": "Upload Health Insurance Card", "status": "pending"},
+            {"id": "consent",   "label": "Emergency Consent Form",       "status": "complete"}
+        ],
+        "coordinator": {
+            "name": "Sarah Jenkins",
+            "online": True,
+            "phone": "+18005551234"
+        }
+    },
+    "er": {
+        "massTraumaAlert": False,
+        "activeUnitsCount": 4,
+        "incomingUnits": [
+            {
+                "isPrimary": True,
+                "etaMinutes": 8,
+                "statusTone": "error",
+                "status": "CRITICAL",
+                "label": "BLS-A (Unit 704)",
+                "complaint": "Chest Pain, Tachypnea (45M)",
+                "metricLabel": "HEART RATE",
+                "metricValue": 104,
+                "search": "704 critical chest pain"
+            },
+            {
+                "isPrimary": False,
+                "etaMinutes": 4,
+                "statusTone": "error",
+                "status": "CRITICAL",
+                "label": "BLS-A (Unit 302)",
+                "complaint": "Multiple Fractures (58M)",
+                "metricLabel": "HEART RATE",
+                "metricValue": 142,
+                "search": "302 critical fracture"
+            },
+            {
+                "isPrimary": False,
+                "etaMinutes": 12,
+                "statusTone": "secondary",
+                "status": "STABLE",
+                "label": "ALS-B (Unit 119)",
+                "complaint": "Lower Limb Fracture (22F)",
+                "metricLabel": "O2 SAT",
+                "metricValue": 98,
+                "search": "119 stable fracture"
+            },
+            {
+                "isPrimary": False,
+                "etaMinutes": 19,
+                "statusTone": "neutral",
+                "status": "PENDING DATA",
+                "label": "RESCUE (Unit 045)",
+                "complaint": "Dispatched to MVA A-12",
+                "metricLabel": "STATUS",
+                "metricValue": "EN ROUTE",
+                "search": "045 pending mva"
+            }
+        ],
+        "capacity": {
+            "bedsAvailable": 3,
+            "bedsTotal": 24,
+            "bedsUsedPct": 87,
+            "traumaBaysAvailable": 1,
+            "traumaBaysTotal": 4,
+            "traumaBaysUsedPct": 75,
+            "staff": "14 Physicians / 28 Nurses"
+        },
+        "surgicalTeams": [
+            {"or": "OR 1 (Cardiac)", "status": "ACTIVE (IN-SURGERY)", "tone": "error"},
+            {"or": "OR 2 (Trauma)", "status": "ON STANDBY", "tone": "secondary"},
+            {"or": "OR 3 (General)", "status": "AVAILABLE", "tone": "neutral"}
+        ],
+        "region": "Bangalore Metro Area",
+        "facility": {
+            "bloodBank": "82 units (O- critical)",
+            "imaging": "CT 1 online, CT 2 online",
+            "lab": "Running (12m turnaround)",
+            "security": "Level 2 Alert Active"
+        }
+    },
+    "flags": {
+        "emergencyOverride": False
+    },
+    "updatedAt": "",
     "tick": 0,
+    "unit": {
+        "id": "704"
+    }
 }
 
 COORDINATOR_REPLIES = [
     "Copy that. Coordinator is monitoring Unit 704 and will update you shortly.",
     "Understood. The medical team has been informed.",
-    "We are approaching the hospital entrance now. Please proceed to Emergency Bay A.",
+    "We are approaching the hospital entrance now. Please proceed to Emergency Bay 4.",
     "Patient vitals are stable — being transmitted to the ER team in real time.",
     "Acknowledged. The trauma team is standing by at Bay 4.",
     "Please remain calm. Johnathan is in good hands with our team.",
@@ -68,33 +183,39 @@ def _tick_loop():
             s["tick"] += 1
             t = s["tick"]
 
+            s["updatedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
             # ETA + distance countdown
-            if s["eta_seconds"] > 0:
-                s["eta_seconds"] = max(0, s["eta_seconds"] - 1)
-                s["distance_km"] = round(max(0.0, s["distance_km"] - s["speed_kmh"] / 3600), 2)
+            if s["transport"]["etaSeconds"] > 0:
+                s["transport"]["etaSeconds"] = max(0, s["transport"]["etaSeconds"] - 1)
+                s["transport"]["distanceKm"] = round(max(0.0, s["transport"]["distanceKm"] - s["transport"]["speedKmh"] / 3600), 2)
+                s["transport"]["distanceMi"] = round(s["transport"]["distanceKm"] * 0.621371, 2)
 
             # Speed sinusoidal fluctuation
-            s["speed_kmh"] = round(58 + 15 * abs(math.sin(t * 0.1)), 1)
+            s["transport"]["speedKmh"] = round(58 + 15 * abs(math.sin(t * 0.1)), 1)
+            s["transport"]["speedMph"] = round(s["transport"]["speedKmh"] * 0.621371, 1)
 
             # Vitals fluctuation every 3 s
             if t % 3 == 0:
                 v = s["vitals"]
-                v["hr"]   = max(96, min(120, v["hr"]   + random.randint(-1, 2)))
+                v["heartRate"] = max(96, min(120, v["heartRate"] + random.randint(-1, 2)))
                 if random.random() > 0.6:
                     v["spo2"] = max(93, min(99, v["spo2"] + random.choice([-1, 0, 1])))
+                v["bpMean"] = round(v["bpDiastolic"] + (v["bpSystolic"] - v["bpDiastolic"]) / 3)
 
             # Incoming unit ETAs every 15 s
             if t % 15 == 0:
-                for u in s["incoming_units"]:
-                    eta = u["eta"]
-                    if isinstance(eta, int) and eta > 1 and random.random() > 0.3:
-                        u["eta"] = eta - 1
+                for u in s["er"]["incomingUnits"]:
+                    if u["isPrimary"]:
+                        continue
+                    if isinstance(u["etaMinutes"], int) and u["etaMinutes"] > 1 and random.random() > 0.3:
+                        u["etaMinutes"] = u["etaMinutes"] - 1
 
             # Keep Unit 704 row in sync with live vitals + ETA
-            for u in s["incoming_units"]:
-                if u["id"] == "704":
-                    u["vital_value"] = s["vitals"]["hr"]
-                    u["eta"] = max(0, math.ceil(s["eta_seconds"] / 60))
+            for u in s["er"]["incomingUnits"]:
+                if u["isPrimary"]:
+                    u["metricValue"] = s["vitals"]["heartRate"]
+                    u["etaMinutes"] = max(0, math.ceil(s["transport"]["etaSeconds"] / 60))
 
 
 threading.Thread(target=_tick_loop, daemon=True).start()
@@ -147,7 +268,7 @@ class Handler(BaseHTTPRequestHandler):
         url = self.path.split("?")[0]
         if url == "/api/state":
             with _lock:
-                self._json(dict(STATE))
+                self._json(STATE)
             return
         if url == "/":
             url = "/index.html"
@@ -168,23 +289,56 @@ class Handler(BaseHTTPRequestHandler):
             if msg:
                 now = time.strftime("%H:%M")
                 with _lock:
-                    STATE["chat_messages"].append({"from": "family",      "text": msg,                           "time": now})
+                    STATE["guardian"]["chat"].append({"from": "guardian", "text": msg, "time": now})
                     reply = random.choice(COORDINATOR_REPLIES)
-                    STATE["chat_messages"].append({"from": "coordinator", "text": reply,                         "time": now})
+                    STATE["guardian"]["chat"].append({"from": "coordinator", "text": reply, "time": now})
                 self._json({"ok": True, "reply": reply})
             else:
                 self._json({"ok": False})
             return
 
-        if url == "/api/action":
-            act = body.get("action")
+        if url == "/api/actions/update-triage":
+            level = body.get("level", "").strip()
+            if level:
+                with _lock:
+                    STATE["case"]["triageLevel"] = level
+                self._json({"ok": True})
+            else:
+                self._json({"ok": False})
+            return
+
+        if url == "/api/actions/emergency-override":
             with _lock:
-                if act == "log_med":
-                    STATE["enroute_log"].append({"text": "Medication Logged", "detail": body.get("detail", "Medication administered")})
-                elif act == "override":
-                    STATE["override_active"] = True
-                elif act == "update_triage":
-                    STATE["triage_level"] = body.get("level", STATE["triage_level"])
+                STATE["flags"]["emergencyOverride"] = True
+                STATE["transport"]["traffic"] = "CRITICAL"
+                # Update status of primary unit to OVERRIDE
+                for u in STATE["er"]["incomingUnits"]:
+                    if u["isPrimary"]:
+                        u["status"] = "OVERRIDE"
+                        u["statusTone"] = "error"
+            self._json({"ok": True})
+            return
+
+        if url == "/api/actions/enroute-log":
+            title = body.get("title", "Medication logged").strip()
+            detail = body.get("detail", "").strip()
+            now = time.strftime("%H:%M")
+            with _lock:
+                STATE["enRouteLog"].append({"title": title, "detail": detail, "time": now})
+            self._json({"ok": True})
+            return
+
+        if url == "/api/actions/dismiss-alert":
+            with _lock:
+                STATE["er"]["massTraumaAlert"] = False
+            self._json({"ok": True})
+            return
+
+        if url == "/api/actions/activate-protocol":
+            with _lock:
+                STATE["er"]["massTraumaAlert"] = True
+                STATE["er"]["capacity"]["traumaBaysAvailable"] = 0
+                STATE["er"]["capacity"]["traumaBaysUsedPct"] = 100
             self._json({"ok": True})
             return
 

@@ -59,3 +59,11 @@ Thumbs.db
 *.njsproj
 *.sln
 *.swp
+
+# Ignore all markdown files except README.md
+**/*.md
+*.md
+!**/README.md
+!README.md
+!**/README.MD
+!README.MD
