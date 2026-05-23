@@ -1,5 +1,9 @@
 # 🏥 Emergency Hospital Resource Optimizer (EHODR)
 
+## 🌐 Live Command Dashboards (Public Vercel Preview)
+
+👉 **[Launch HTML Command Hub](https://ehodr-dashboards.vercel.app)**
+
 ## 📄 Preview the Presentation
 
 - [EHODR presentation PDF](./presentation.pdf)
