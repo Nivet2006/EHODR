@@ -1,155 +1,313 @@
 # 🏥 Emergency Hospital Resource Optimizer (EHODR)
 
-EHODR is a high-fidelity, decision-support dashboard and multi-solver optimization suite designed for real-time allocation of critical healthcare resources (ICU beds, ventilators, medical staff) during severe regional disasters. 
+EHODR is a full-stack, disaster-response decision-support platform combining a **Quantum-Inspired optimization engine**, a **Universal AI Memory System (UAMS)** backend, **real-time GIS routing**, and **three role-specific HTML command dashboards** — all built to SDG 3 (Good Health & Well-being) standards.
 
 ---
 
 ## 🚀 System Architecture
 
-EHODR provides a unified interface built on Streamlit that translates triage severities and geographical distance matrices into optimized allocation vectors. It protects overloaded emergency rooms and routes critical patients to facilities best equipped to treat them.
-
 ```
-                    ┌───────────────────────────────────┐
-                    │  Emergency Dispatcher Dashboard  │
-                    │       (Streamlit Interface)       │
-                    └─────────────────┬─────────────────┘
-                                      │ Configure Scenario & Solver
-                                      ▼
-                    ┌───────────────────────────────────┐
-                    │    Multi-Solver Engine Core       │
-                    └────┬────────────┬────────────┬────┘
-                         │            │            │
-                         ▼            ▼            ▼
-             ┌───────────────┐ ┌──────────────┐ ┌──────────────┐
-             │Exact Classical│ │  Simulated   │ │ Quantum QAOA │
-             │ Combinatorial │ │  Annealing  │ │ Optimization │
-             │  Brute Force  │ │  (Thermal)  │ │ (QUBO/Qiskit)│
-             └───────────────┘ └──────────────┘ └──────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                 EHODR Platform — High-Level View                  │
+├─────────────────────────────┬─────────────────────────────────────┤
+│  🖥️ Streamlit Dashboard      │  🌐 HTML Command Dashboard Hub       │
+│  app_enhanced.py            │  dashboards/index.html              │
+│  · Multi-solver optimizer   │  ├── ambulance.html                 │
+│  · Live triage registrar    │  ├── guardian.html                  │
+│  · GIS real-time map        │  └── er-command.html                │
+│  · EOC Advisor chatbot      │                                     │
+└────────────┬────────────────┴──────────────┬──────────────────────┘
+             │                               │
+             ▼                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│            Universal AI Memory System (UAMS) Backend            │
+│                     gateway/ — FastAPI v2.0                     │
+│  /v1/memories  /v1/chat  /v1/health  (port 8000)               │
+│  · Structured Logging · Rate Limiting · Prometheus /metrics     │
+├──────────────┬───────────────────────┬──────────────────────────┤
+│  PostgreSQL  │   Qdrant v1.18.0      │   Redis 7                │
+│  (memories   │   (vector semantic    │   (session cache &       │
+│  metadata)   │    search index)      │    rate limit state)     │
+└──────────────┴───────────────────────┴──────────────────────────┘
 ```
-
-For a detailed breakdown of mathematical formulations, test scenarios, and project roadmap, see the [Reference Documentation](#-reference-documentation-hierarchy) section below.
 
 ---
 
-## 📂 Project Directory Structure
-
-This repository contains the following core files and configurations:
+## 📂 Complete Project Directory Structure
 
 ```text
 EHODR/
-├── app_enhanced.py           # Main Streamlit dashboard & core solver engines
 │
-├── Explainer.md              # Plain-language guide of core concepts & user controls
-├── testing.md                # Interactive testing cases and diagnostic inputs
-├── FUTURE.md                 # Technical engineering roadmap and scaling blueprint
+├── app_enhanced.py              # Main Streamlit dashboard & all solver engines
 │
-├── run_dashboard.ps1         # PowerShell script shortcut to launch the app
-├── run_dashboard.bat         # Windows CMD script shortcut to launch the app
-├── kill_all.ps1              # PowerShell script shortcut to stop all active processes
-└── kill_all.bat              # Windows CMD script shortcut to stop all active processes
+├── dashboards/                  # Standalone HTML role dashboards (served on :8080)
+│   ├── index.html               # Command Hub — entry point with 3 role tiles
+│   ├── ambulance.html           # Paramedic cockpit: vitals, nav, hospital readiness
+│   ├── guardian.html            # Family-facing tracker: ETA, secure chat, forms
+│   ├── er-command.html          # ER Command: incoming units, capacity, regional map
+│   └── shared/
+│       ├── ehodr-base.css       # Material Design 3 token CSS design system
+│       ├── ehodr-theme.js       # Dynamic theme + color token loader
+│       └── nav.js               # Cross-dashboard navigation switcher bar
+│
+├── gateway/                     # Universal AI Memory System (UAMS) FastAPI Backend
+│   ├── main.py                  # FastAPI app factory, lifespan, middleware stack
+│   ├── config.py                # Pydantic settings from .env
+│   ├── dependencies.py          # Shared DI: get_db, get_qdrant, get_redis
+│   ├── Dockerfile               # Production Docker image build
+│   ├── requirements.txt         # Gateway-specific Python dependencies
+│   ├── api/v1/
+│   │   ├── router.py            # v1 API router aggregator
+│   │   ├── memory.py            # POST /memories, GET /memories/search
+│   │   ├── chat.py              # POST /chat — LLM-assisted memory recall
+│   │   └── health.py            # GET /health — liveness & dependency checks
+│   ├── core/
+│   │   ├── embedding.py         # Pluggable embedding provider (OpenAI / local)
+│   │   ├── ranking.py           # Semantic importance re-ranker
+│   │   ├── deduplication.py     # Cosine similarity dedup filter
+│   │   ├── compression.py       # Memory content compressor
+│   │   └── security.py          # API key auth & HMAC verification
+│   ├── db/
+│   │   ├── models.py            # SQLAlchemy ORM memory model
+│   │   ├── postgres.py          # Async SQLAlchemy engine factory
+│   │   ├── qdrant_client.py     # Qdrant collection manager & vector ops
+│   │   └── redis_client.py      # Redis async client & TTL cache helpers
+│   ├── middleware/
+│   │   ├── logging.py           # Structured JSON logging middleware
+│   │   ├── rate_limit.py        # 100 req/60 s sliding-window rate limiter
+│   │   └── error_handler.py     # Global exception → JSON error response
+│   └── schemas/
+│       ├── memory.py            # Pydantic schemas: MemoryCreate, MemoryRead
+│       └── chat.py              # Pydantic schemas: ChatRequest, ChatResponse
+│
+├── agents/
+│   └── memory_client.py         # Python client SDK: UniversalMemoryClient.save/recall
+│
+├── scripts/
+│   ├── init_qdrant_collections.py  # One-shot Qdrant collection bootstrap
+│   ├── mcp_server.py               # JSON-RPC 2.0 MCP server (Claude/AI tool use)
+│   ├── validate_spec.py            # OpenSpec conformance validator
+│   ├── watch_edits.py              # File watcher for live spec drift detection
+│   └── backup_qdrant.sh            # Qdrant snapshot backup shell script
+│
+├── openspec/design/
+│   └── system_architecture.md      # Authoritative system blueprint (OpenSpec)
+│
+├── nginx/
+│   └── nginx.conf                  # Reverse proxy config for production
+│
+├── docker-compose.yml              # Full production stack: gateway + qdrant + postgres + redis
+├── docker-compose.override.yml     # Local dev port overrides
+├── requirements.txt                # Dashboard Python dependencies (pip install -r)
+├── .env                            # Active secrets (not committed)
+├── .env.example                    # Environment variable reference template
+│
+├── run_all.ps1                     # ⭐ Full stack launcher (Docker + deps + Streamlit)
+├── run_all.bat                     # Windows CMD equivalent
+├── run_command_dashboards.ps1      # Launches HTML dashboards on :8080
+├── run_command_dashboards.bat      # Windows CMD equivalent
+├── run_dashboard.ps1               # Streamlit-only shortcut
+├── run_dashboard.bat               # Windows CMD equivalent
+├── kill_all.ps1                    # Terminates all active processes
+├── kill_all.bat                    # Windows CMD equivalent
+│
+├── Explainer.md                    # Plain-language user guide
+├── testing.md                      # Interactive test cases & diagnostic scenarios
+├── FUTURE.md                       # Engineering roadmap & scaling blueprint
+└── pytest.ini                      # Test runner configuration
 ```
 
 ---
 
 ## ⚙️ Core Solver Paradigms
 
-EHODR implements three distinct algorithmic solver pathways inside [app_enhanced.py](file:///c:/codingprojects/EHODR/app_enhanced.py):
+Three distinct algorithmic pathways are implemented in [`app_enhanced.py`](file:///c:/codingprojects/EHODR/app_enhanced.py). All three share an identical **QUBO Hamiltonian** formulation.
 
-1. **Exact Classical Solver**: Exhaustively searches the entire combinatorial space to guarantee absolute mathematical optimality. Perfect for verifying smaller triage grids.
-2. **Simulated Annealing (Quantum-Inspired)**: Uses statistical thermodynamic cooling via a custom physical state transitions class (`HospitalAllocationAnnealer`) to bypass local minima in high-dimensional solution spaces. Highly efficient for large-scale disaster scenarios.
-3. **Quantum QAOA Solver**: Formulates allocations as a Quadratic Unconstrained Binary Optimization (QUBO) problem using Qiskit. Dynamically simulates parameterized quantum circuits under matching problem and mixer Hamiltonians.
+| Solver | Scale | Speed | Library |
+|---|---|---|---|
+| **Exact Classical (Brute Force)** | ≤ 6 patients | Slow (exponential) | Pure Python |
+| **Simulated Annealing (Quantum-Inspired)** | Any scale | < 0.1 sec | `simanneal` |
+| **QAOA (Quantum)** | ≤ 18 qubits | 5–15 sec (CPU sim) | `qiskit`, `qiskit-algorithms` |
 
-> [!NOTE]
-> **Streamlit Multi-Threaded Signal Patching**: Standard simulated annealing libraries try to register signal handlers for `SIGINT` on creation. Since Streamlit runs scripts in auxiliary background threads, this normally raises runtime errors. EHODR includes an active, thread-safe monkeypatch for `signal.signal` to handle transitions smoothly.
-
----
-
-## 🎨 Key Features & Controls
-
-* **📝 Triage Patient Registrar (New!)**:
-  * An interactive intake form where operators register incoming arrivals in real-time by typing their name, age, transit distances, and selecting active symptoms (e.g. Altered Mental Status, Respiratory Distress).
-  * Automatically calculates an **Emergency Severity Index (ESI 1-5)** priority score based on symptom profiles, translating them into solver severities.
-  * *UAMS Agent Memory Sync*: Features an optional checkbox that connects to the `UniversalMemoryClient` in [memory_client.py](file:///c:/codingprojects/EHODR/agents/memory_client.py) to save registered patient profiles semantically in the vector database backend.
-  * *Triage Registry Board*: Renders a beautiful visual table in the main panel to view the active queue, clear the pool, or remove individual patients.
-* **Dynamic Disaster Presets**: Instantly load high-stress presets such as **Mass Casualty** (10 patients, 3 hospitals), **Pandemic Surge** (12 patients, 3 hospitals), **Earthquake** (8 patients, 2 hospitals), or choose **📝 Live Patient Registrar** to build an interactive triage pool.
-* **Multi-Dimensional Constraint Safety**: Solvers guarantee that total allocated patients never exceed available **ICU Beds**, **Ventilators**, or **Emergency Medical Staff** per hospital.
-* **Advanced Heuristics Engine**:
-  * *Doctor Specialties*: Automatically routes life-threatening Severity 3 cases to the primary trauma center (**Hospital H1**).
-  * *Transit Time Windows*: Scales objective penalty weights to prevent patients from being sent to hospitals outside safe geographical distance thresholds.
-* **Visual Telemetry & Reporting**:
-  * *Resource Load Visualizer*: Interactive bar charts comparing patient allocations against total hospital capacities.
-  * *Distance Heatmap*: Color-coded grids mapping patient severity and hospital distance costs, dynamically rendering the registered patient names on the y-axis for granular dispatch tracking.
-  * *CSV Export*: Direct local download button for finalized patient allocation directories containing actual names, ages, and symptoms.
-* **🤖 Draggable EOC Command Advisor**:
-  * An interactive client-side floating chatbot overlay widget that starts minimized as a beautiful pulsing bubble in the bottom-right corner.
-  * Features native JavaScript dragging event listeners and minimization toggles that bypass Streamlit's backend reruns, persisting position coordinates in `sessionStorage`.
-  * Integrated with an **Offline Fallback Diagnostic Analyzer** that automatically runs deterministic, rule-based diagnostic assessments of allocation tables, routing reasons, and saturation levels when local LLM services are offline.
+**Auto-routing**: If QAOA is selected but the grid requires > 18 qubits (≥ 6 patients × 3 hospitals), the system automatically redirects to Simulated Annealing to prevent memory exhaustion, displaying the exact RAM cost of the blocked simulation.
 
 ---
 
-## 🛠️ Quick Start & Local Development
+## 📐 Mathematical Formulation (QUBO Hamiltonian)
 
-### 1. Prerequisites
-Ensure you have Python 3.10+ installed on your system.
+All solvers minimize the same energy function. Let $x_{p,h} \in \{0,1\}$ denote assigning patient $p$ to hospital $h$:
 
-### 2. Activate the Environment
-Open a terminal in the project directory and activate the virtual environment:
-```powershell
-.\venv\Scripts\Activate.ps1
+$$H = A \sum_{p} \left( \sum_{h} x_{p,h} - 1 \right)^2 + B \sum_{h} \text{Penalties}(x_{p,h}) + \sum_{p,h} (\text{Severity}_p \times \text{Distance}_{p,h})\, x_{p,h}$$
+
+| Term | Role |
+|---|---|
+| **Term A** | Penalizes states where a patient is assigned to zero or multiple hospitals |
+| **Term B** | Penalizes violations of ICU bed, ventilator, and medical staff capacities |
+| **Objective** | Minimizes severity-weighted transport distance |
+
+---
+
+## 🎨 Streamlit Dashboard Features
+
+### Scenario Modes
+- **Manual Config**: Slider-driven patient/hospital counts with random distance matrices
+- **Mass Casualty Preset**: 10 patients, 3 hospitals, restricted bed supply
+- **Pandemic Surge Preset**: 12 patients, 3 hospitals, ventilator bottleneck stress
+- **Earthquake Preset**: 8 patients, 2 hospitals, proximity-critical routing
+- **📝 Live Patient Registrar**: Interactive intake form — type name, age, symptoms → ESI score auto-calculated → UAMS memory sync optional
+
+### 🌍 Real-Time GIS Dispatch Map
+Three Indian city presets with real hospital geocoordinates, OSRM live road routing, and interactive Folium map:
+
+| Preset | City | Hospitals |
+|---|---|---|
+| Bangalore Metro Triage | Bangalore, KA | NIMHANS, Fortis Bannerghatta, Manipal Old Airport Rd |
+| Kerala Kochi Flood | Kochi, KL | Aster Medcity, Amrita Edappally, Medical Trust |
+| Chennai Cyclone Surge | Chennai, TN | Apollo Greams Rd, MIOT International, Fortis Malar |
+
+- Markers color-coded by hospital saturation (green < 70% / orange < 85% / red ≥ 85%)
+- Patient circles color-coded by severity (🔴 Critical / 🟡 Urgent / 🟢 Stable)
+- OSRM polylines show actual road paths; Haversine fallback used offline
+
+### Advanced Constraints
+- **Doctor Specialties**: Severity-3 patients hard-routed to H1 (trauma center)
+- **Transit Time Windows**: Routes > 15 km incur additional objective penalty
+
+### Visualization & Reporting
+- **Allocation Results Table**: Patient → Hospital assignments with severity and distance
+- **Distance Heatmap**: `severity × distance` matrix (float-formatted, registered patient names on y-axis)
+- **Bed Allocation Chart**: Bar chart comparing allocations vs. capacity per hospital
+- **QAOA Convergence Plot**: Energy descent across circuit layers (reps)
+- **🔬 Quantum Formulation Tab**: Rendered Hamiltonian math + live 3-qubit QAOA ansatz circuit diagram
+- **CSV Export**: One-click download of full allocation directory
+
+### 🤖 Floating EOC Command Advisor Chatbot
+- Draggable floating bubble (JavaScript `mousemove` + `sessionStorage` position persistence)
+- Integrates with local Ollama LLM for contextual routing analysis
+- **Offline fallback**: Rule-based deterministic diagnostic engine analyzes bottlenecks, saturation, and routing justifications without internet or LLM
+
+---
+
+## 🌐 HTML Command Dashboard Hub
+
+Standalone multi-role interface at `http://localhost:8080` — no Streamlit required.
+
+| Dashboard | URL | Audience |
+|---|---|---|
+| **Command Hub** | `/index.html` | Entry point — role selector |
+| **Ambulance Command** | `/ambulance.html` | Paramedic: Unit 704 cockpit, vitals, hospital readiness |
+| **Guardian Portal** | `/guardian.html` | Family: ambulance ETA, journey timeline, secure chat |
+| **ER Command Center** | `/er-command.html` | Hospital: incoming units, capacity monitor, regional map |
+
+Built with Material Design 3 tokens (`ehodr-base.css`), Inter/Plus Jakarta Sans fonts, and a shared navigation bar (`nav.js`).
+
+---
+
+## 🧠 Universal AI Memory System (UAMS)
+
+The UAMS backend (`gateway/`) provides persistent semantic memory for AI agents.
+
+| Component | Technology | Purpose |
+|---|---|---|
+| FastAPI Gateway | Python / Uvicorn | REST API + WebSocket server (port 8000) |
+| PostgreSQL 15 | `asyncpg` / SQLAlchemy | Structured memory metadata & relational records |
+| Qdrant v1.18.0 | Vector DB | Semantic similarity search across stored memories |
+| Redis 7 | In-memory cache | Session state, rate limit counters, TTL caching |
+| Prometheus | `/metrics` endpoint | Latency, request rate, error rate observability |
+
+### API Endpoints
+```
+GET  /                        → Redirects to /docs (Swagger UI)
+GET  /v1/health               → Service liveness + dependency status
+POST /v1/memories             → Store a new memory
+GET  /v1/memories/search      → Semantic recall by query
+POST /v1/chat                 → LLM-assisted context retrieval
+GET  /metrics                 → Prometheus scrape endpoint
 ```
 
-### 3. Launch the Dashboard
-You can start the dashboard in one of three ways:
+### MCP Server (`scripts/mcp_server.py`)
+JSON-RPC 2.0 stdio server exposing UAMS as Model Context Protocol tools for Claude and other AI agents:
+- `memory_recall` — semantic search across stored memories
+- `memory_save` — persist insight / decision / knowledge
+- `validate_architecture_spec` — conformance check against OpenSpec blueprint
 
-* **Using PowerShell Shortcut (Recommended)**:
-  ```powershell
-  .\run_dashboard.ps1
-  ```
-* **Using Windows CMD / Double-Clicking**:
-  ```cmd
-  run_dashboard.bat
-  ```
-* **Using Streamlit CLI**:
-  ```powershell
-  .\venv\Scripts\streamlit run app_enhanced.py
-  ```
+---
 
-Once running, the application will automatically launch at `http://localhost:8501` in your default browser.
+## 🛠️ Quick Start
 
-### 4. Running Unit Tests
-To execute the automated unit test suites:
+### Prerequisites
+- **Docker Desktop** (for UAMS backend services)
+- **Python 3.10+** with the `venv` created at `./venv/`
+
+### 1. Configure Environment
+```powershell
+Copy-Item .env.example .env
+# Edit .env to set POSTGRES_PASSWORD, API_SECRET_KEY, OPENAI_API_KEY, etc.
+```
+
+### 2. Launch Full Stack (Recommended)
+Starts Docker services, installs Python dependencies, initializes Qdrant collections, and launches Streamlit — all in one command:
+```powershell
+.\run_all.ps1
+```
+
+The Streamlit dashboard will be available at **http://localhost:8501**.
+
+### 3. Launch HTML Command Dashboards (Optional)
+```powershell
+.\run_command_dashboards.ps1
+```
+Opens at **http://localhost:8080**.
+
+### 4. Streamlit Only (No Docker)
+For dashboard-only usage without the UAMS backend:
+```powershell
+.\run_dashboard.ps1
+```
+
+### 5. Install / Update Python Dependencies
+```powershell
+.\venv\Scripts\pip install -r requirements.txt
+```
+
+### 6. Run Tests
 ```powershell
 .\venv\Scripts\python -m pytest
 ```
 
-### 5. Stopping the Dashboard
-To shut down all active Streamlit and Python processes:
+### 7. Stop All Processes
 ```powershell
-# In PowerShell:
-.\kill_all.ps1
-
-# In Windows CMD:
-kill_all.bat
+.\kill_all.ps1    # PowerShell
+kill_all.bat      # Windows CMD
 ```
 
 ---
 
-## 📐 Mathematical Formulation
+## 🔧 Key Technical Notes
 
-The optimization system maps hospital allocations to a Quadratic Unconstrained Binary Optimization (QUBO) Hamiltonian structure, where $x_{p,h} \in \{0,1\}$ denotes assigning patient $p$ to hospital $h$:
+> [!NOTE]
+> **Streamlit Signal Patching**: `simanneal` registers `SIGINT` handlers on init. Since Streamlit runs scripts in worker threads, this raises `ValueError`. EHODR monkeypatches `signal.signal` at startup to silently skip non-main-thread registrations.
 
-$$H = A \sum_{p} \left( \sum_{h} x_{p,h} - 1 \right)^2 + B \sum_{h} \text{Penalties}(x_{p,h}) + \sum_{p,h} (\text{Severity}_p \times \text{Distance}_{p,h}) x_{p,h}$$
+> [!NOTE]
+> **QAOA Memory Safety**: Statevector simulation scales as $2^n$ complex amplitudes. The QUBO for $n$ patients × $h$ hospitals uses $n \times h$ qubits. The system hard-caps at 18 qubits and displays exact RAM cost before auto-routing to Simulated Annealing.
 
-* **Energy Objective (Term 3)**: Minimizes transit distance weighted by the severity of the patient's condition.
-* **Allocation Constraint (Term A)**: Heavily penalizes invalid states where a patient is assigned to multiple or zero hospitals.
-* **Capacity Constraint (Term B)**: Penalizes state spaces that violate physical capacities for ICU beds, ventilators, or medical staff.
+> [!NOTE]
+> **GIS Routing Fallback**: Real road routes are fetched from the public OSRM API (`router.project-osrm.org`). If the API is unreachable (offline/timeout), the Haversine formula with a 1.3× circuity factor and 30 km/h average speed is used as a graceful fallback.
+
+> [!NOTE]
+> **Qdrant Compatibility**: The project targets Qdrant v1.7.x–v1.18.x. `init_qdrant_collections.py` uses `PayloadSchemaType.KEYWORD` (not `DATETIME`) for the `created_at` field to maintain backward compatibility with v1.7.4.
 
 ---
 
-## 📚 Reference Documentation Hierarchy
+## 📚 Reference Documentation
 
-For more advanced inquiries, consult the comprehensive guides below:
+| Document | Purpose |
+|---|---|
+| [Explainer.md](file:///c:/codingprojects/EHODR/Explainer.md) | Plain-language guide: how severities, costs, and solvers work |
+| [testing.md](file:///c:/codingprojects/EHODR/testing.md) | Test cases: mass casualty, pandemic surge, specialty routing, feasibility failures |
+| [FUTURE.md](file:///c:/codingprojects/EHODR/FUTURE.md) | Roadmap: multi-stage simulation, vehicle dispatch, IBM QPU execution |
+| [openspec/design/system_architecture.md](file:///c:/codingprojects/EHODR/openspec/design/system_architecture.md) | Authoritative OpenSpec blueprint for all services and API contracts |
 
-1. **🏥 [Explainer.md](file:///c:/codingprojects/EHODR/Explainer.md) (User Orientation Guide)**: A non-technical breakdown explaining how severities, cost scores, and solvers calculate patient routing, with step-by-step instructions on reading results.
-2. **🧪 [testing.md](file:///c:/codingprojects/EHODR/testing.md) (Interactive Testing Guide)**: Detailed test cases covering mass casualty constraints, pandemic ventilator bottlenecks, specialty routing, custom scenario feasibility failures, and the new **Patient Triage Registrar**.
-3. **🚀 [FUTURE.md](file:///c:/codingprojects/EHODR/FUTURE.md) (Architectural Scaling Roadmap)**: Evolutionary plans for GIS real-world map integrations, multi-stage time-stepped simulation timelines, vehicle dispatch constraints (air-rescue vs ground), and physical IBM QPU hardware execution.
+---
+
+*Built for the Quantum Disaster Response Hackathon 2026 | SDG 3: Good Health & Well-being | Qiskit QAOA × Simulated Annealing × UAMS*

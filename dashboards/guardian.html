@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Guardian Dashboard - EHODR</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="shared/ehodr-base.css" rel="stylesheet"/>
+<script src="shared/ehodr-theme.js"></script>
+</head>
+<body class="bg-background text-on-background font-body-base" data-dashboard="guardian">
+<header class="bg-surface border-b border-outline-variant flex justify-between items-center w-full px-margin-desktop h-16 z-50 fixed top-0">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">EHODR</span>
+<div class="hidden md:flex gap-md ml-xl">
+<a class="text-on-surface-variant hover:bg-surface-container-low transition-colors px-sm py-xs font-label-caps" href="#">Dispatch</a>
+<a class="text-on-surface-variant hover:bg-surface-container-low transition-colors px-sm py-xs font-label-caps" href="#">Patient Records</a>
+<a class="text-primary border-b-2 border-primary px-sm py-xs font-label-caps" href="#">Live Map</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden md:block">
+<input id="record-search" class="bg-surface-container-low border-none rounded-full px-lg py-xs text-sm w-64 focus:ring-2 focus:ring-primary" placeholder="Search records..." type="text"/>
+</div>
+<button type="button" class="material-symbols-outlined text-on-surface-variant p-sm hover:bg-surface-container-low rounded-full">notifications</button>
+<button type="button" class="material-symbols-outlined text-on-surface-variant p-sm hover:bg-surface-container-low rounded-full">emergency_home</button>
+<button type="button" class="material-symbols-outlined text-primary p-sm hover:bg-surface-container-low rounded-full">account_circle</button>
+</div>
+</header>
+<main class="pt-24 pb-12 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto">
+<div class="bg-primary-container text-white rounded-xl p-lg mb-xl flex flex-col md:flex-row justify-between items-center gap-lg relative overflow-hidden shadow-sm">
+<div class="relative z-10">
+<p class="font-label-caps text-on-primary-container mb-xs">CURRENT EMERGENCY STATUS</p>
+<h1 id="patient-name" class="font-headline-lg text-headline-lg mb-xs">Patient: Johnathan Doe</h1>
+<div class="flex items-center gap-sm">
+<span class="w-3 h-3 bg-secondary rounded-full active-pulse"></span>
+<p id="transit-status" class="font-body-bold">In Transit to St. Jude Medical Center</p>
+</div>
+</div>
+<div class="flex gap-md z-10">
+<button type="button" id="call-coordinator" class="bg-secondary text-on-secondary px-lg py-md rounded-lg font-body-bold flex items-center gap-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">call</span> Call Coordinator
+</button>
+<button type="button" id="share-status" class="bg-surface-container-lowest text-primary px-lg py-md rounded-lg font-body-bold flex items-center gap-sm border border-outline-variant hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined">share</span> Share Status
+</button>
+</div>
+<div class="absolute right-[-50px] top-[-50px] w-64 h-64 bg-secondary opacity-10 rounded-full blur-3xl"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-lg">
+<div class="md:col-span-8 flex flex-col gap-lg">
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm flex flex-col h-[500px]">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<div class="flex items-center gap-sm"><span class="material-symbols-outlined text-primary">location_on</span><span class="font-body-bold">Live Ambulance Tracker (Unit 704)</span></div>
+<span id="eta-badge" class="bg-secondary-container text-on-secondary-container px-sm py-1 rounded-full text-xs font-bold">EST. ARRIVAL: 8 MINS</span>
+</div>
+<div class="flex-grow relative">
+<img class="w-full h-full object-cover" alt="Ambulance route map" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmJ1thim5CizoElCN4Tb-QVya5DhEdttrIQRsTK9-_WhsxX8rsSxDq-Uko4S-e_pIYjR5_R1gG_r5akchC-r5fgCa-9zusNFSJ0IA7osP_RlqDywWt8RR3NT9GzNYdr8q1wjKCN7-YiOp9Cabvn_pV5uKUWXtZtp_Tgcnm0u6H-lOeOhMZ_lg1r46R2ayB-6n3QSXAPM1C44IsvMLFT7EFHPr4HfcLPhwboad8XueXjih_HzAGalObtkW3hrd6f47IwFh2Xv5GRdo"/>
+<div class="absolute bottom-md left-md glass-panel p-md rounded-lg border border-outline-variant flex gap-lg">
+<div><p class="font-label-caps text-on-surface-variant">SPEED</p><p id="speed-value" class="font-stat-vitals text-primary">42 <span class="text-sm font-normal">mph</span></p></div>
+<div class="w-px bg-outline-variant"></div>
+<div><p class="font-label-caps text-on-surface-variant">DISTANCE</p><p id="distance-value" class="font-stat-vitals text-primary">3.2 <span class="text-sm font-normal">mi</span></p></div>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-xl border border-outline-variant p-lg shadow-sm">
+<h2 class="font-headline-md text-headline-md mb-lg flex items-center gap-sm"><span class="material-symbols-outlined text-primary">history</span> Journey Timeline</h2>
+<div id="journey-timeline" class="space-y-lg relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-outline-variant"></div>
+<p id="handover-eta" class="text-sm text-on-surface-variant mt-md pl-xl">Expected arrival updating…</p>
+</div>
+</div>
+<div class="md:col-span-4 flex flex-col gap-lg">
+<div class="bg-white rounded-xl border border-outline-variant flex flex-col h-[450px] shadow-sm">
+<div class="p-md border-b border-outline-variant bg-surface-container-low flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white"><span class="material-symbols-outlined">support_agent</span></div>
+<div><p id="coordinator-name" class="font-body-bold leading-none">Sarah Mitchell</p><p id="coordinator-status" class="text-xs text-secondary font-bold">Medical Coordinator • Online</p></div>
+</div>
+<div id="chat-messages" class="flex-grow overflow-y-auto p-md space-y-md flex flex-col"></div>
+<div class="p-md border-t border-outline-variant flex gap-sm">
+<input id="chat-input" class="flex-grow border-none bg-surface-container-low rounded-lg px-md py-sm text-sm focus:ring-1 focus:ring-primary" placeholder="Type a message..." type="text"/>
+<button type="button" id="chat-send" class="bg-primary text-white w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined">send</span></button>
+</div>
+</div>
+<div class="bg-white rounded-xl border border-outline-variant p-lg shadow-sm">
+<h3 class="font-body-bold mb-md">Required Actions</h3>
+<div id="required-forms" class="space-y-sm"></div>
+<div class="mt-lg p-md bg-secondary-container/20 rounded-lg border border-secondary/20">
+<p class="text-xs text-secondary font-bold flex items-center gap-xs"><span class="material-symbols-outlined text-sm">lock</span> SECURE UPLOAD</p>
+<p class="text-[11px] mt-1 text-on-surface-variant">All documents are encrypted and shared directly with the medical team.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="mt-12 py-lg border-t border-outline-variant bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-md">
+<p class="font-label-caps text-on-surface-variant">© 2024 EHODR Emergency Response Systems</p>
+<div class="flex gap-lg">
+<a class="text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Support Center</a>
+</div>
+</div>
+</footer>
+<script src="shared/nav.js"></script>
+<script src="shared/live-data.js"></script>
+<script src="shared/guardian-app.js"></script>
+</body>
+</html>

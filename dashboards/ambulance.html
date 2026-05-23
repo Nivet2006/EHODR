@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EHODR | Ambulance Command Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="shared/ehodr-base.css" rel="stylesheet"/>
+<script src="shared/ehodr-theme.js"></script>
+<style>body { background-color: #F8FAFC; }</style>
+</head>
+<body class="bg-background text-on-surface font-body-base overflow-hidden" data-dashboard="ambulance">
+<header class="flex justify-between items-center w-full px-margin-desktop h-16 z-50 fixed top-0 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">EHODR</span>
+<div class="h-6 w-px bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest">Active Dispatch</span>
+<span id="case-label" class="font-body-bold text-body-bold">CASE #772-B | TRAUMA L1</span>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-sm px-md py-xs bg-error-container text-on-error-container rounded-full animate-pulse">
+<span class="material-symbols-outlined text-[20px]">emergency</span>
+<span class="font-label-caps text-label-caps">PRIORITY 1</span>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full cursor-pointer">emergency_home</span>
+<span class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full cursor-pointer">account_circle</span>
+</div>
+</div>
+</header>
+<nav class="flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant py-lg pt-20 gap-sm">
+<div class="px-md mb-md">
+<div class="flex items-center gap-md p-md bg-white border border-outline-variant rounded-xl shadow-sm">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">704</div>
+<div class="flex flex-col">
+<span class="font-body-bold text-sm">Unit 704</span>
+<span class="text-[10px] font-label-caps text-secondary">ON-CALL STATUS</span>
+</div>
+</div>
+</div>
+<div class="space-y-1">
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-container-high mx-2 rounded-lg transition-all" href="#"><span class="material-symbols-outlined">emergency</span><span class="font-label-caps text-label-caps">Dispatch</span></a>
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-container-high mx-2 rounded-lg transition-all" href="#"><span class="material-symbols-outlined">person_search</span><span class="font-label-caps text-label-caps">Patient Records</span></a>
+<a class="flex items-center gap-md px-md py-3 bg-primary text-on-primary rounded-lg mx-2 transition-all" href="#"><span class="material-symbols-outlined">map</span><span class="font-label-caps text-label-caps">Live Map</span></a>
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-container-high mx-2 rounded-lg transition-all" href="#"><span class="material-symbols-outlined">forum</span><span class="font-label-caps text-label-caps">Communications</span></a>
+</div>
+<div class="mt-auto px-md space-y-md">
+<button type="button" id="emergency-override" class="w-full py-4 bg-error text-on-error font-body-bold rounded-xl shadow-lg active:opacity-90 transition-opacity flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined">warning</span>EMERGENCY OVERRIDE
+</button>
+<div class="h-px bg-outline-variant"></div>
+<div class="space-y-1">
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span class="font-label-caps text-label-caps">Settings</span></a>
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg" href="#"><span class="material-symbols-outlined text-[20px]">help</span><span class="font-label-caps text-label-caps">Support</span></a>
+</div>
+</div>
+</nav>
+<main class="ml-64 pt-16 h-screen p-gutter overflow-hidden flex flex-col gap-gutter">
+<div class="bg-error text-white p-4 rounded-xl flex justify-between items-center shadow-md border-l-[8px] border-tertiary">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] opacity-80 uppercase">Current Triage Level</span>
+<span id="triage-level" class="font-headline-md text-headline-md">RED - CRITICAL (TRAUMA)</span>
+</div>
+<div class="flex items-center gap-xl">
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-[10px] opacity-80 uppercase">ETA TO ST. JUDE MEDICAL</span>
+<span id="eta-display" class="font-headline-md text-headline-md">04:22 MIN</span>
+</div>
+<button type="button" id="update-triage" class="bg-white text-error px-6 py-2 rounded-lg font-body-bold hover:bg-error-container transition-colors">UPDATE TRIAGE</button>
+</div>
+</div>
+<div class="flex-1 grid grid-cols-12 gap-gutter overflow-hidden">
+<div class="col-span-5 flex flex-col gap-gutter">
+<div class="bg-white border border-outline-variant rounded-xl p-md flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-md">
+<span class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-error vitals-pulse">favorite</span> LIVE PATIENT VITALS
+</span>
+<span id="live-sync-badge" class="text-xs font-label-caps text-secondary">CONNECTING…</span>
+</div>
+<div class="space-y-md flex-1 overflow-y-auto">
+<div class="bg-surface-container-low rounded-lg p-md border-l-4 border-error flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Heart Rate (BPM)</span>
+<span id="heart-rate-value" class="font-stat-vitals text-stat-vitals text-error flex items-baseline gap-xs">104 <span class="text-sm font-body-base">Normal 60-100</span></span>
+</div>
+<div class="w-1/2 h-16 flex items-end overflow-hidden">
+<svg class="w-full h-full" viewBox="0 0 200 60"><path class="ekg-line" d="M0 30 L20 30 L30 10 L40 50 L50 30 L70 30 L80 30 L90 5 L100 55 L110 30 L130 30 L140 10 L150 50 L160 30 L200 30" fill="none" stroke="#DC2626" stroke-width="2"></path></svg>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-md border-l-4 border-secondary flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase">O2 Saturation (%)</span>
+<span id="spo2-value" class="font-stat-vitals text-stat-vitals text-secondary flex items-baseline gap-xs">96 <span class="text-sm font-body-base">SpO2 Target 94+</span></span>
+</div>
+<div class="w-1/2 h-8 bg-surface-container rounded-full overflow-hidden relative"><div id="spo2-bar" class="absolute inset-y-0 left-0 bg-secondary w-[96%]"></div></div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-md border-l-4 border-primary flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Blood Pressure (mmHg)</span>
+<span id="bp-value" class="font-stat-vitals text-stat-vitals text-primary flex items-baseline gap-xs">128/84 <span class="text-sm font-body-base">Mean 98</span></span>
+</div>
+<span class="material-symbols-outlined text-primary">trending_flat</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<button type="button" class="bg-error text-on-error h-20 rounded-xl font-body-bold flex flex-col items-center justify-center gap-xs hover:opacity-90 transition-opacity"><span class="material-symbols-outlined">bolt</span>DEFIB READY</button>
+<button type="button" data-action="log-meds" class="bg-primary text-on-primary h-20 rounded-xl font-body-bold flex flex-col items-center justify-center gap-xs hover:opacity-90 transition-opacity"><span class="material-symbols-outlined">medical_services</span>LOG MEDS</button>
+</div>
+</div>
+<div class="col-span-4 flex flex-col gap-gutter">
+<div class="bg-white border border-outline-variant rounded-xl flex-1 relative overflow-hidden flex flex-col">
+<div class="absolute top-md left-md z-10 bg-white/90 backdrop-blur-md p-md rounded-lg border border-outline-variant shadow-lg w-64">
+<div class="flex flex-col gap-xs">
+<span class="font-label-caps text-[10px] text-secondary">DESTINATION</span>
+<span id="dest-name" class="font-body-bold leading-tight">St. Jude Medical Center - ER Bay 4</span>
+<div class="h-px bg-outline-variant my-xs"></div>
+<div class="flex justify-between items-end">
+<div><span class="text-[10px] font-label-caps text-on-surface-variant">DISTANCE</span><div id="dist-km" class="font-body-bold">1.4 km</div></div>
+<div class="text-right"><span class="text-[10px] font-label-caps text-on-surface-variant">TRAFFIC</span><div id="traffic-level" class="text-error font-body-bold">MODERATE</div></div>
+</div>
+</div>
+</div>
+<div class="flex-1 bg-surface-container relative">
+<img class="w-full h-full object-cover grayscale-[0.2]" alt="GPS navigation map with emergency route" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrrunnJG2deFMPtyaUJIXSb9QMvDfe1YKEWBRbpC_UnW5ZDQYHH6k1eMiYeqC8MGBPvJquSMqSRoXjJeWFU-isdzRjBlBME-WHdgNfnkmcqJW7P3pkHWFNF2qHi1sEFTTtoua7tZL5pcDXam-SbTkN9aS9mUeNcX5rUntcG8FdcVfr40wXR8_m8O4-f5Tkztf1lDFNgA7oUnud4vE7d_O2JRfzrorKeHn7iwH7sO1wghGl44IELtqDh7fUrVpz_eZiSW92bodteSs"/>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center ring-4 ring-primary/20 animate-ping absolute"></div>
+<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center relative shadow-lg">
+<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">emergency_share</span>
+</div>
+</div>
+</div>
+<div class="p-md bg-white border-t border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-md"><span class="material-symbols-outlined text-secondary">traffic</span><span id="nav-hint" class="font-body-bold text-sm">Main St. Clear — Take 4th exit</span></div>
+<button type="button" class="text-primary font-label-caps flex items-center gap-xs">VIEW ALT ROUTES <span class="material-symbols-outlined">expand_more</span></button>
+</div>
+</div>
+</div>
+<div class="col-span-3 flex flex-col gap-gutter">
+<div class="bg-white border border-outline-variant rounded-xl p-md flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-md">
+<span class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-xs"><span class="material-symbols-outlined text-primary">domain</span> HOSPITAL READINESS</span>
+<div class="w-3 h-3 bg-secondary rounded-full"></div>
+</div>
+<div class="space-y-md flex-1">
+<div class="p-md bg-surface-container-low rounded-lg border border-outline-variant">
+<span class="font-label-caps text-[10px] text-on-surface-variant">TRAUMA BAY STATUS</span>
+<div class="flex justify-between items-center mt-xs"><span id="trauma-bay" class="font-body-bold">Bay #4 Secured</span><span class="material-symbols-outlined text-secondary">check_circle</span></div>
+<p id="trauma-note" class="text-xs text-on-surface-variant mt-xs">Team scrubbed in. Blood units O- ready.</p>
+</div>
+<div class="p-md bg-surface-container-low rounded-lg border border-outline-variant">
+<span class="font-label-caps text-[10px] text-on-surface-variant">SPECIALIST ON-CALL</span>
+<div class="flex items-center gap-md mt-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden">
+<img class="w-full h-full rounded-full object-cover" alt="Dr. Sarah Vance" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe0qys7at5wBunqx5pok1ggKF5RmQHL3b1b_htTb8TSPkjSGUIbZtWUogInLB06NBqXPkjEq688rzjTyozRpoAkoJRJc8wywcd6h4I1Rjj7Rrqw0Q3IcDkC78ddR8xn_sT7nmvf4DydHPoupz5BIbpFKKqAwf6ObMp6Hw9sVJhE_3McLUQogJ9YF1rBU05YspBMc0tj7C6Is4KwzWHGcywj9soH8h_t1giIbYBmq-rBdKqYiwGhPeXy4mslr9VYNIrUWw0OsV7nM0"/>
+</div>
+<div><div id="specialist-name" class="font-body-bold text-sm">Dr. Sarah Vance</div><div id="specialist-role" class="text-[10px] font-label-caps text-secondary">NEUROSURGEON</div></div>
+</div>
+</div>
+<div class="mt-auto space-y-sm">
+<button type="button" class="w-full py-3 bg-primary-container text-on-primary-container rounded-xl font-body-bold flex items-center justify-center gap-sm hover:opacity-90 transition-opacity"><span class="material-symbols-outlined">video_call</span>START TELEMEDICINE</button>
+<button type="button" class="w-full py-3 border border-outline-variant text-on-surface-variant rounded-xl font-body-bold flex items-center justify-center gap-sm hover:bg-surface-container transition-colors"><span class="material-symbols-outlined">upload_file</span>PUSH PRE-ARRIVAL DATA</button>
+</div>
+</div>
+</div>
+<div id="enroute-log-list" class="space-y-sm"></div>
+</div>
+</div>
+</main>
+<script src="shared/nav.js"></script>
+<script src="shared/live-data.js"></script>
+<script src="shared/ambulance-app.js"></script>
+</body>
+</html>

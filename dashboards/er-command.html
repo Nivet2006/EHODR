@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EHODR | ER Command Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="shared/ehodr-base.css" rel="stylesheet"/>
+<script src="shared/ehodr-theme.js"></script>
+</head>
+<body class="bg-background text-on-background font-body-base antialiased min-h-screen" data-dashboard="er">
+<header class="bg-surface border-b border-outline-variant flex justify-between items-center w-full px-margin-desktop h-16 z-50 fixed top-0">
+<div class="flex items-center gap-md">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">EHODR</h1>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<span class="font-label-caps text-label-caps text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">CENTRAL DISPATCH</span>
+</div>
+<div class="flex items-center gap-lg">
+<div class="relative flex items-center bg-surface-container-low rounded-full px-4 py-2 w-64">
+<span class="material-symbols-outlined text-outline text-sm">search</span>
+<input id="unit-search" class="bg-transparent border-none focus:ring-0 text-sm ml-2 w-full" placeholder="Patient ID or Unit..." type="text"/>
+</div>
+<div class="flex items-center gap-sm">
+<button type="button" class="p-2 rounded-full hover:bg-surface-container-low transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+</button>
+<button type="button" class="p-2 rounded-full hover:bg-surface-container-low transition-colors"><span class="material-symbols-outlined text-on-surface-variant">emergency_home</span></button>
+<button type="button" class="p-2 rounded-full hover:bg-surface-container-low transition-colors"><span class="material-symbols-outlined text-on-surface-variant">account_circle</span></button>
+</div>
+</div>
+</header>
+<aside class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 pt-16 bg-surface-container-low border-r border-outline-variant py-lg gap-sm z-40">
+<div class="px-6 mb-md flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden">
+<img alt="Unit 704" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWToQfmYBX6U7FMfC0u-bWUMT55DiNrspaOYMoYdU2h9x1YvENBKfyt6-6uB-uMhMyqvwQmdpR0plstMXAQAO5R2w_PocjLHqXxecMv5xlktslCRfq8iav8nPxneMmVmZzaAHBtmY2Qkg9kwkKTAyuex0kh-4TiXX5Pjh3iQlmniKfMDTvYG_ZmOC7WiO2EaEjpmidqkhVJYxuidUhdHQQB9IMA7qQNJLK3cyU4-lRBo-CEtF1AaK5Url9xGwXKoo95Q8JNN_XTco"/>
+</div>
+<div><p class="font-body-bold text-sm text-primary">Unit 704</p><p class="text-xs text-secondary font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>ON-CALL</p></div>
+</div>
+<nav id="sidebar-nav" class="flex-1 space-y-1">
+<a class="flex items-center gap-md px-6 py-3 bg-primary text-on-primary rounded-lg mx-2 transition-all" href="#" data-nav="dispatch"><span class="material-symbols-outlined">emergency</span><span class="font-label-caps text-label-caps">Dispatch</span></a>
+<a class="flex items-center gap-md px-6 py-3 text-on-surface-variant hover:bg-surface-container-high mx-2 rounded-lg transition-all" href="#" data-nav="records"><span class="material-symbols-outlined">person_search</span><span class="font-label-caps text-label-caps">Patient Records</span></a>
+<a class="flex items-center gap-md px-6 py-3 text-on-surface-variant hover:bg-surface-container-high mx-2 rounded-lg transition-all" href="#" data-nav="map"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">map</span><span class="font-label-caps text-label-caps">Live Map</span></a>
+<a class="flex items-center gap-md px-6 py-3 text-on-surface-variant hover:bg-surface-container-high mx-2 rounded-lg transition-all" href="#" data-nav="comms"><span class="material-symbols-outlined">forum</span><span class="font-label-caps text-label-caps">Communications</span></a>
+</nav>
+<div class="mt-auto px-2 space-y-1">
+<button type="button" id="er-emergency-override" class="w-full py-3 px-4 bg-error text-white font-label-caps text-xs rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 mb-4"><span class="material-symbols-outlined text-sm">warning</span>EMERGENCY OVERRIDE</button>
+<a class="flex items-center gap-md px-6 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#"><span class="material-symbols-outlined">settings</span><span class="font-label-caps text-label-caps">Settings</span></a>
+<a class="flex items-center gap-md px-6 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#"><span class="material-symbols-outlined">help</span><span class="font-label-caps text-label-caps">Support</span></a>
+</div>
+</aside>
+<main class="md:ml-64 pt-16 min-h-screen">
+<div class="p-margin-desktop space-y-lg">
+<div id="mass-trauma-alert" class="bg-tertiary-container border-l-4 border-error p-md rounded-xl flex items-center justify-between shadow-sm animate-pulse">
+<div class="flex items-center gap-md text-on-tertiary-container">
+<span class="material-symbols-outlined text-4xl">emergency</span>
+<div>
+<p class="font-label-caps text-label-caps uppercase tracking-widest opacity-80">Active Mass Trauma Alert</p>
+<h2 class="font-headline-md text-headline-md leading-none">LEVEL 1 RED - MULTIPLE CASUALTIES INBOUND</h2>
+</div>
+</div>
+<div class="flex gap-sm">
+<button type="button" id="activate-protocol" class="bg-on-tertiary-container text-tertiary-container px-lg py-2 rounded-lg font-body-bold text-sm">ACTIVATE PROTOCOL</button>
+<button type="button" id="dismiss-alert" class="border border-on-tertiary-container text-on-tertiary-container px-lg py-2 rounded-lg font-body-bold text-sm">DISMISS</button>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-lg">
+<section class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<div class="flex items-center gap-sm"><span class="material-symbols-outlined text-primary">ambulance</span><h3 class="font-headline-md text-headline-md text-primary">Incoming Tracker</h3></div>
+<span id="active-units-count" class="bg-primary text-on-primary px-3 py-1 rounded-full text-xs font-bold">5 ACTIVE UNITS</span>
+</div>
+<div id="incoming-units" class="p-md space-y-md overflow-y-auto max-h-[500px]"></div>
+</section>
+<div class="col-span-12 lg:col-span-4 space-y-lg">
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+<h4 class="font-label-caps text-label-caps text-outline mb-md flex items-center gap-2"><span class="material-symbols-outlined text-sm">bed</span> ER CAPACITY MONITOR</h4>
+<div class="grid grid-cols-2 gap-md">
+<div class="p-md bg-surface-container-low rounded-lg border border-outline-variant"><p class="text-[10px] font-label-caps text-on-surface-variant">AVAILABLE BEDS</p><p id="beds-available" class="font-stat-vitals text-headline-lg text-primary">03<span class="text-sm font-body-base text-outline ml-1">/ 24</span></p><div class="w-full bg-surface-container-highest h-1 rounded-full mt-2"><div id="beds-bar" class="bg-error h-full rounded-full" style="width:88%"></div></div></div>
+<div class="p-md bg-surface-container-low rounded-lg border border-outline-variant"><p class="text-[10px] font-label-caps text-on-surface-variant">TRAUMA BAYS</p><p id="trauma-bays" class="font-stat-vitals text-headline-lg text-error">01<span class="text-sm font-body-base text-outline ml-1">/ 04</span></p><div class="w-full bg-surface-container-highest h-1 rounded-full mt-2"><div id="trauma-bar" class="bg-error h-full rounded-full" style="width:75%"></div></div></div>
+</div>
+<div class="mt-md p-md bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-between"><div><p class="text-[10px] font-label-caps text-on-surface-variant">STAFF ON-CALL</p><p id="staff-on-call" class="font-body-bold text-primary">12 Physicians • 28 RNs</p></div><span class="material-symbols-outlined text-secondary">group</span></div>
+</section>
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+<h4 class="font-label-caps text-label-caps text-outline mb-md flex items-center gap-2"><span class="material-symbols-outlined text-sm">medical_mask</span> SURGICAL TEAM STATUS</h4>
+<div id="surgical-teams" class="space-y-sm"></div>
+</section>
+<section id="regional-map" class="bg-white border border-outline-variant rounded-xl overflow-hidden h-64 relative group">
+<img alt="Regional dispatch map" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDASkEnyrQncdR_xh_bZi2PT2ctrN5D1hBvQ6lz6s2_3ht8i16pDMoYkVzK8w8LLo-hh4TaxAcYERNyrnRkGxIaOYGkyIhHcPpaywQUhg2bxwXz6tDMwywvzDoP0DQ8juOzPy1idz-0dkDr6IEtfR-p1iSNOERCyW2lePhQWS-POx0X4Mu1kLMtarfPyrsQglKSNNS30Q5NlNPQbgwv2zIxjXGCE4ioTcDGQ9ZyXbAwBpX_f4dzbXo41ayDQ0GYkaaW0JEoWuMo_28"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent pointer-events-none"></div>
+<div class="absolute bottom-4 left-4 right-4 text-white"><p class="font-label-caps text-[10px] opacity-80">ACTIVE REGIONAL OVERVIEW</p><h5 id="region-name" class="font-body-bold">Central Metropolitan Zone</h5></div>
+<button type="button" id="map-fullscreen" class="absolute top-4 right-4 bg-white/90 backdrop-blur p-2 rounded-full shadow-lg group-hover:scale-110 transition-transform"><span class="material-symbols-outlined text-primary">fullscreen</span></button>
+</section>
+</div>
+</div>
+<section id="facility-stats" class="grid grid-cols-1 md:grid-cols-4 gap-lg">
+<div class="bg-surface p-md border border-outline-variant rounded-xl flex items-center gap-md"><div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary-container">bloodtype</span></div><div><p class="font-label-caps text-xs text-outline">BLOOD BANK</p><p id="stat-blood" class="font-body-bold text-primary">O- NEG: CRITICAL</p></div></div>
+<div class="bg-surface p-md border border-outline-variant rounded-xl flex items-center gap-md"><div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary-container">radiology</span></div><div><p class="font-label-caps text-xs text-outline">IMAGING WAIT</p><p id="stat-imaging" class="font-body-bold text-primary">CT: 14 MINS</p></div></div>
+<div class="bg-surface p-md border border-outline-variant rounded-xl flex items-center gap-md"><div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary-container">labs</span></div><div><p class="font-label-caps text-xs text-outline">LAB THROUGHPUT</p><p id="stat-lab" class="font-body-bold text-primary">28 SAMPLES PENDING</p></div></div>
+<div class="bg-surface p-md border border-outline-variant rounded-xl flex items-center gap-md"><div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary-container">security</span></div><div><p class="font-label-caps text-xs text-outline">FACILITY SEC</p><p id="stat-security" class="font-body-bold text-primary">LEVEL 2 SECURED</p></div></div>
+</section>
+</div>
+</main>
+<button type="button" id="new-incident" class="fixed bottom-margin-desktop right-margin-desktop w-14 h-14 bg-error text-white rounded-full shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50 group">
+<span class="material-symbols-outlined text-2xl">add_alert</span>
+<span class="absolute right-16 bg-error text-white font-label-caps px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">NEW INCIDENT</span>
+</button>
+<script src="shared/nav.js"></script>
+<script src="shared/live-data.js"></script>
+<script src="shared/er-app.js"></script>
+</body>
+</html>
