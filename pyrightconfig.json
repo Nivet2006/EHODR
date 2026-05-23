@@ -1,0 +1,8 @@
+{
+  "venvPath": "c:\\codingprojects\\EHODR",
+  "venv": "venv",
+  "extraPaths": [
+    "c:\\codingprojects\\EHODR\\venv\\Lib\\site-packages",
+    "c:\\codingprojects\\EHODR"
+  ]
+}
