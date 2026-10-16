@@ -31,4 +31,4 @@ prometheus-fastapi-instrumentator==7.0.0
 # Quality Assurance / Testing Suite
 pytest==8.1.1
 pytest-asyncio==0.23.6
-anyio==4.3.0
+anyio==4.14.2
